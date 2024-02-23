@@ -14,7 +14,7 @@ RT/68 provides three modes which are mutually exclusive: Console Monitor to load
 
 # ABASIC
 
-This is a work in progress. Currently there appear to be a few different 'ABASIC's. One is the ABASIC/REDIT that belongs with RT/68MX. This doesn't run under an operating system like FLEX or OS-9 but rather RT/68MX and is loaded, compiles and saves to tape. This version can run mulit-task or single task. Then there is a modified version that runs under 6800 FLEX. This version is single task only. Then there appears to be another that I don't have details for yet.
+This is a work in progress. Currently there appear to be a few different 'ABASIC's. One is the ABASIC/RTEDIT that belongs with RT/68MX. This doesn't run under an operating system like FLEX or OS-9 but rather RT/68MX and is loaded, compiles and saves to tape. This version can run mulit-task or single task. Then there is a modified version that runs under 6800 FLEX. This version is single task only. Then there appears to be another that I don't have details for yet.
 
 The code in the ABASIC-FLEX directory is the 6800(?) FLEX version.
 
@@ -43,6 +43,85 @@ List of commands and functions
 Callable functions include input and output of a character on the terminal, input and output of a byte in hexadecimal format, print a string terminated by EOT, and terminate the current program and return control to MIKBUG.
 
 MIKBUG allows the user to install an interrupt handler using the M command to specify the handler address.
+
+# Minibug
+
+FFFE-FFFF - Restart Vectors
+FF80-FFFd - ?
+FF00-FF7F - RAM (6810)
+FE00-FEFF - Minibug
+FCF6-FDFF - ?
+FCF4-FCF5 - UART
+
+L
+M
+R
+P
+G
+
+E000-E1FF - Minibug ???
+
+Ignore:
+
+Jump table
+
+The beginning of the monitor ROM consists of a jump table to common routines further into the ROM.
+
+```
+RETURN	EQU	$C000	RETURN TO PROMPT
+OUTCHAR	EQU	$C003	OUTPUT CHAR ON CONSOLE
+INCHAR	EQU	$C006	INPUT CHAR FROM CONSOLE AND ECHO
+PDATA	EQU	$C009	PRINT TEXT STRING @ X ENDED BY $04
+OUTHR	EQU	$C00C	PRINT RIGHT HEX CHAR @ X
+OUTHL	EQU	$C00F	PRINT LEFT HEX CHAR @ X
+OUT2HS	EQU	$C012	PRINT 2 HEX CHARS @ X
+OUT4HS	EQU	$C015	PRINT 4 HEX CHARS @ X
+INHEX	EQU	$C018	INPUT 1 HEX CHAR TO A. CARRY SET = OK
+INBYTE	EQU	$C01B	INPUT 1 BYTE TO A. CARRY SET = OK
+BADDR	EQU	$C01E	INPUT ADDRESS TO X. CARRY SET = OK
+```
+
+https://www.waveguide.se/?article=mc3-monitor-11
+
+Vector table
+The monitor sets up a vector table in RAM for access to various routines. Each vector consists of three bytes. A jump ($7E) and then the address to the routine. This allows software to use different routines for these functions.
+
+```
+CONSVEC	EQU	$7FE5	CONSOLE STATUS VECTOR
+CONOVEC	EQU	$7FE8	CONSOLE OUTPUT VECTOR
+CONIVEC	EQU	$7FEB	CONSOLE INPUT VECTOR
+TMOFVEC	EQU	$7FEE	TIMER OVER FLOW INTERUPT VECTOR
+TMOCVEC	EQU	$7FF1	TIMER OUTPUT COMPARE INTERUPT VECTOR
+TMICVEC	EQU	$7FF4	TIMER INPUT CAPTURE INTERUPT VECTOR
+IRQVEC	EQU	$7FF7	IRQ INTERUPT VECTOR
+SWIVEC	EQU	$7FFA	SWI INTERUPT VECTOR
+NMIVEC	EQU	$7FFD	NMI INTERUPT VECTOR
+```
+
+The interrupt vectors are a mirror of the CPU vectors. After initialization these all points to an RTI that effectively disables the interrupt. One exception is the SWI vector that points to a stack printout and then back to the monitor prompt. Pressing 'G' will continue execution after an SWI. The three vectors for handling the console I/O are CONSVEC, CONOVEC and CONIVEC. Think of them as stdin and stdout in the Unix world. They point to the routines for the console interface and can be changed and redirected for other output or input. 
+
+CONSVEC - Status vector. Returns the number of characters in buffer in A-acc.
+CONIVEC - Input vector. Returns a character in A-acc.
+CONOVEC - Output vector. Sends a character in A-acc.
+
+Jump table
+The beginning of the monitor ROM consists of a jump table to common routines further into the ROM.
+
+```
+RETURN	EQU	$C000	RETURN TO PROMPT
+OUTCHAR	EQU	$C003	OUTPUT CHAR ON CONSOLE
+INCHAR	EQU	$C006	INPUT CHAR FROM CONSOLE AND ECHO
+PDATA	EQU	$C009	PRINT TEXT STRING @ X ENDED BY $04
+OUTHR	EQU	$C00C	PRINT RIGHT HEX CHAR @ X
+OUTHL	EQU	$C00F	PRINT LEFT HEX CHAR @ X
+OUT2HS	EQU	$C012	PRINT 2 HEX CHARS @ X
+OUT4HS	EQU	$C015	PRINT 4 HEX CHARS @ X
+INHEX	EQU	$C018	INPUT 1 HEX CHAR TO A. CARRY SET = OK
+INBYTE	EQU	$C01B	INPUT 1 BYTE TO A. CARRY SET = OK
+BADDR	EQU	$C01E	INPUT ADDRESS TO X. CARRY SET = OK
+```
+
+The reason for using a jump table is that the contents of the monitor ROM can be altered without affecting these addresses meaning that programs utilizing these routines will not have to be changed.
 
 # Systems
 
@@ -113,6 +192,43 @@ TINIT  FDB XXXXX TERMINAL INITIALIZATION
 STAT   FDB XXXXX CHECK TERMINAL STATUS
 OUTCH  FDB XXXXX OUTPUT CHARACTER
 INCH   FDB XXXXX INPUT CHARACTER W/ ECHO 
+```
+
+Entry points?
+
+```
+  "ACIAIN": "FF84",
+  "ACOUT": "FFC0",
+  "BOUT": "FCCE",
+  "CHKSTB": "FF78",
+  "CMSRCH": "FD81",
+  "IN1CHR": "FF50",
+  "INBYTE": "FF59",
+  "INCH": "FC78",
+  "INEEE": "FDAC",
+  "INHEX": "FCAA",
+  "INIT": "FD47",
+  "INTBAD": "FE95",
+  "INTRET": "FF2B",
+  "JOUT1C": "FD09",
+  "OUT1CH": "FFA6",
+  "OUT2H": "FCBF",
+  "OUT2HS": "FCCA",
+  "OUT4HS": "FCC8",
+  "OUTCH": "FC75",
+  "OUTEEE": "FDD1",
+  "OUTHL": "FC67",
+  "OUTHR": "FC6B",
+  "OUTLDR": "FCF4",
+  "OUTS": "FCCC",
+  "PIAIN": "FF5E",
+  "PIAIN2": "FF6D",
+  "POUT1": "FFB5",
+  "RNINT2": "FED4",
+  "RNINT3": "FED6",
+  "RUNINT": "FECB",
+  "SINT": "FE80",
+  "TAPOUT": "FCEE",
 ```
 
 # RT/68 Hardware Configuration
