@@ -916,20 +916,21 @@ CMDTBL	EQU  *  	;*
 zEND    EQU  *
 	END		;* 
 
-;* RAM
-;* $0000 (at least 256 bytes?)
-;* $8000 - 8003 ACIA
-;* $8004 - RAM?
-;* $A000 - RAM
-;* ROM
-;* $E000 ROM starts
-;* $F000 ROM (4096 bytes, reset @FFFE)
-;* $F000 ROM (4096 bytes, reset @FFFE)
-;* $F000 ROM (4096 bytes, reset @FFFE)
-;* I/O
-;* PIAC $C000 ?
-;* PIAD $D000 ? (6820/6821/6522)
-;* ACIA $8000 ? (weird, 6850)
+;* $E000 base                          | $FC00 base                            |
+;* RAM                                 | RAM                                   |
+;* $0000 (at least 256 bytes?)         | $0000                                 |
+;* $8000 - 8003 ACIA                   | $8000 - $8003 ACIA                    |
+;* $8004 - RAM?                        | $8004 - $8007 PIA                     |
+;* $A000 - RAM                         | $A000 - Base Ram                      |
+;* ROM                                 | ROM                                   |
+;* $E000 ROM starts                    | $FC00 ROM starts                      |
+;* $F000 ROM (4096 bytes, reset @FFFE) |                                       |
+;* $F000 ROM (4096 bytes, reset @FFFE) |                                       |
+;* $F000 ROM (4096 bytes, reset @FFFE) |                                       |
+;* I/O                                 | IO                                    |
+;* PIAC $C000 ?                        |                                       |
+;* PIAD $D000 ? (6820/6821/6522)       |                                       |
+;* ACIA $8000 ? (weird, 6850)          |                                       |
 ;*[ Fini ]***********************************************************************
 
 ;/* Local Variables: */
