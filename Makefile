@@ -24,10 +24,10 @@ rt68mx.s19: rt68mx.p
 	srec_info rt68mx.s19
 
 rt68mx.lst: rt68mx.asm rt68mx.inc
-	asl -i . -D DEF9600 -L rt68mx.asm
+	asl -i . -L rt68mx.asm
 
 rt68mx.p: rt68mx.asm rt68mx.inc asl.inc
-	asl -i . -D DEF9600 -D NOMIKBUG -L rt68mx.asm
+	asl -i . -D NOMIKBUG -L rt68mx.asm
 
 # ------------------------------------------------------------------------------
 #
@@ -36,11 +36,24 @@ mikbug.s19: mikbug.p
 	ls
 	srec_info mikbug.s19
 
-mikbug.lst: mikbug.asm mikbug.inc asl.inc
-	asl -i . -D DEF9600 -L mikbug.asm
+mikbug.lst: mikbug.asm asl.inc
+	asl -i .  -L mikbug.asm
 
-mikbug.p: mikbug.asm mikbug.inc ascii.inc
-	asl -i . -D DEF9600 -L mikbug.asm
+mikbug.p: mikbug.asm ascii.inc
+	asl -i . -L mikbug.asm
+
+# ------------------------------------------------------------------------------
+#
+minibug.s19: minibug.p
+	p2hex +5 -F Moto -r \$$-\$$ minibug.p minibug.s19
+	ls
+	srec_info minibug.s19
+
+minibug.lst: minibug.asm asl.inc
+	asl -i .  -L minibug.asm
+
+minibug.p: minibug.asm ascii.inc
+	asl -i . -L minibug.asm
 
 # ------------------------------------------------------------------------------
 #
