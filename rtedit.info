@@ -2,6 +2,9 @@
 * srec_cat  rtedit.s19 -o rtedit.bin -binary
 * f9dasm -6800 -info rtedit.info -offset 0100 -begin 0100 -end 1000 rtedit.bin |& tee rtedit.asm
 *
+* egrep -i 'BCC|BCS|BEQ|BGE|BGT|BHI|BLE|BLS|BLT|BMI|BNE|BPL|BRA|BSR|BVC|BVS|' rtedit.s
+* egrep -i 'JMP|JSR' rtedit.s
+*
 * RTEDIT Commnads
 * * NEW
 * * RT68
@@ -156,6 +159,14 @@ LABEL   089D WTF007
 COMMENT 04F8 ------------------------------------------------------------------------------
 COMMENT 04F8 WTFrell
 LABEL   04F8 WTF008
+*
+LABEL   8007 PIACB
+LABEL   E07E PRSTR
+LABEL   E0CC PRSPC
+LABEL   E141 PCRLF
+LABEL   E16A CONSLE
+LABEL   E350 IN1CHR
+LABEL   E3A6 OUT1CH
 *
 ***
 *** RTS

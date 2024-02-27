@@ -57,14 +57,14 @@ M1000   EQU     $1000
 M1081   EQU     $1081
 M1300   EQU     $1300
 M1301   EQU     $1301
-M8007   EQU     $8007
+PIACB   EQU     $8007
 MCF10   EQU     $CF10
-ZE07E   EQU     $E07E
-ZE0CC   EQU     $E0CC
-ZE141   EQU     $E141
-ZE16A   EQU     $E16A
-ZE350   EQU     $E350
-ZE3A6   EQU     $E3A6
+PRSTR   EQU     $E07E
+PRSPC   EQU     $E0CC
+PCRLF   EQU     $E141
+CONSLE  EQU     $E16A
+IN1CHR  EQU     $E350
+OUT1CH  EQU     $E3A6
 
 ;****************************************************
 ;* Program Code / Data Areas                        *
@@ -163,7 +163,7 @@ Z0194   LDX     #RT68MX                  ;0194: CE 01 91       '...'
 ; ------------------------------------------------------------------------------
         JMP     Z01A8                    ;01A2: 7E 01 A8       '~..'
 
-Z01A5   JMP     ZE16A                    ;01A5: 7E E1 6A       '~.j'
+Z01A5   JMP     CONSLE                   ;01A5: 7E E1 6A       '~.j'
 Z01A8   LDX     #M0036                   ;01A8: CE 00 36       '..6'
         LDAA    #$10                     ;01AB: 86 10          '..'
         LDAB    #$81                     ;01AD: C6 81          '..'
@@ -559,10 +559,10 @@ Z0427   LDAB    M0033                    ;0427: D6 33          '.3'
 ; ------------------------------------------------------------------------------
 ; WTFrell
 WTF002  FCB     $00                      ;0497: 00             '.'
+        JSR     Z0F00                    ;0498: BD 0F 00       '...'
 ; ------------------------------------------------------------------------------
 ; WTFrell
-WTF003  JSR     Z0F00                    ;0498: BD 0F 00       '...'
-        FCB     $4E                      ;049B: 4E             'N'
+WTF003  FCB     $4E                      ;049B: 4E             'N'
         LDAB    #$21                     ;049C: C6 21          '.!'
         PSHB                             ;049E: 37             '7'
         CLRA                             ;049F: 4F             'O'
@@ -1730,11 +1730,11 @@ Z0CE4   STX     M0022                    ;0CE4: DF 22          '."'
 Z0CEA   LDAA    #$11                     ;0CEA: 86 11          '..'
         LDAB    #$3C                     ;0CEC: C6 3C          '.<'
         BSR     Z0D0D                    ;0CEE: 8D 1D          '..'
-Z0CF0   JSR     ZE350                    ;0CF0: BD E3 50       '..P'
+Z0CF0   JSR     IN1CHR                   ;0CF0: BD E3 50       '..P'
         CMPA    #$02                     ;0CF3: 81 02          '..'
         BNE     Z0CF0                    ;0CF5: 26 F9          '&.'
         CLRB                             ;0CF7: 5F             '_'
-Z0CF8   JSR     ZE350                    ;0CF8: BD E3 50       '..P'
+Z0CF8   JSR     IN1CHR                   ;0CF8: BD E3 50       '..P'
         CMPA    #$03                     ;0CFB: 81 03          '..'
         BEQ     Z0D07                    ;0CFD: 27 08          ''.'
         STAA    ,X                       ;0CFF: A7 00          '..'
@@ -1745,25 +1745,25 @@ Z0CF8   JSR     ZE350                    ;0CF8: BD E3 50       '..P'
 Z0D07   CLR     ,X                       ;0D07: 6F 00          'o.'
         LDAA    #$13                     ;0D09: 86 13          '..'
         LDAB    #$34                     ;0D0B: C6 34          '.4'
-Z0D0D   JSR     ZE3A6                    ;0D0D: BD E3 A6       '...'
-        STAB    M8007                    ;0D10: F7 80 07       '...'
+Z0D0D   JSR     OUT1CH                   ;0D0D: BD E3 A6       '...'
+        STAB    PIACB                    ;0D10: F7 80 07       '...'
         RTS                              ;0D13: 39             '9'
 ; ------------------------------------------------------------------------------
 
 Z0D14   LDAA    #$3F                     ;0D14: 86 3F          '.?'
-        JSR     ZE3A6                    ;0D16: BD E3 A6       '...'
-        JSR     ZE0CC                    ;0D19: BD E0 CC       '...'
+        JSR     OUT1CH                   ;0D16: BD E3 A6       '...'
+        JSR     PRSPC                    ;0D19: BD E0 CC       '...'
 Z0D1C   STX     M0022                    ;0D1C: DF 22          '."'
         STX     M0024                    ;0D1E: DF 24          '.$'
         LDAB    #$80                     ;0D20: C6 80          '..'
-Z0D22   JSR     ZE350                    ;0D22: BD E3 50       '..P'
+Z0D22   JSR     IN1CHR                   ;0D22: BD E3 50       '..P'
         CMPA    #$0F                     ;0D25: 81 0F          '..'
         BNE     Z0D35                    ;0D27: 26 0C          '&.'
         CPX     M0024                    ;0D29: 9C 24          '.$'
         BEQ     Z0D39                    ;0D2B: 27 0C          ''.'
         DEX                              ;0D2D: 09             '.'
         LDAA    ,X                       ;0D2E: A6 00          '..'
-        JSR     ZE3A6                    ;0D30: BD E3 A6       '...'
+        JSR     OUT1CH                   ;0D30: BD E3 A6       '...'
         BRA     Z0D22                    ;0D33: 20 ED          ' .'
 Z0D35   CMPA    #$18                     ;0D35: 81 18          '..'
         BNE     Z0D50                    ;0D37: 26 17          '&.'
@@ -1775,7 +1775,7 @@ Z0D39   FCB     $8D,$07                  ;0D39: 8D 07          '..'
         LDX     ,X                       ;0D43: EE 00          '..'
         INS                              ;0D45: 31             '1'
         INS                              ;0D46: 31             '1'
-        JSR     ZE07E                    ;0D47: BD E0 7E       '..~'
+        JSR     PRSTR                    ;0D47: BD E0 7E       '..~'
         BSR     Z0D58                    ;0D4A: 8D 0C          '..'
         LDX     M0024                    ;0D4C: DE 24          '.$'
         BRA     Z0D1C                    ;0D4E: 20 CC          ' .'
@@ -1786,7 +1786,7 @@ Z0D50   STAA    ,X                       ;0D50: A7 00          '..'
 Z0D58   LDAA    #$01                     ;0D58: 86 01          '..'
         STAA    M0026                    ;0D5A: 97 26          '.&'
 ; ------------------------------------------------------------------------------
-        JMP     ZE141                    ;0D5C: 7E E1 41       '~.A'
+        JMP     PCRLF                    ;0D5C: 7E E1 41       '~.A'
 
 Z0D5F   TSTB                             ;0D5F: 5D             ']'
         BEQ     Z0D22                    ;0D60: 27 C0          ''.'
@@ -1854,19 +1854,19 @@ Z0DB3   CLRA                             ;0DB3: 4F             'O'
         BSR     Z0DCE                    ;0DC1: 8D 0B          '..'
         LDAA    #$14                     ;0DC3: 86 14          '..'
         LDAB    #$34                     ;0DC5: C6 34          '.4'
-Z0DC7   STAB    M8007                    ;0DC7: F7 80 07       '...'
+Z0DC7   STAB    PIACB                    ;0DC7: F7 80 07       '...'
         BSR     Z0DCE                    ;0DCA: 8D 02          '..'
         NOP                              ;0DCC: 01             '.'
         RTS                              ;0DCD: 39             '9'
 ; ------------------------------------------------------------------------------
 
 ; ------------------------------------------------------------------------------
-Z0DCE   JMP     ZE3A6                    ;0DCE: 7E E3 A6       '~..'
+Z0DCE   JMP     OUT1CH                   ;0DCE: 7E E3 A6       '~..'
 
 Z0DD1   BSR     Z0D97                    ;0DD1: 8D C4          '..'
 Z0DD3   BSR     Z0D83                    ;0DD3: 8D AE          '..'
 ; ------------------------------------------------------------------------------
-        JMP     ZE141                    ;0DD5: 7E E1 41       '~.A'
+        JMP     PCRLF                    ;0DD5: 7E E1 41       '~.A'
 
 Z0DD8   PSHA                             ;0DD8: 36             '6'
         LDAA    ,X                       ;0DD9: A6 00          '..'
