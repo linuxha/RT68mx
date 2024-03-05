@@ -21,13 +21,21 @@ This version of RT68mx source code has been modified to specifically assemble pr
 
 RT/68 provides three modes which are mutually exclusive: Console Monitor to load, save and debug programs; Single Task Mode to execute existing Mikbug(TM) software without modification; and Multi-Task Mode which is the real time multiprogramming mode.
 
-# ABASIC
+# A/BASIC
 
-This is a work in progress. Currently there appear to be a few different 'ABASIC's. One is the ABASIC/RTEDIT that belongs with RT/68MX. This doesn't run under an operating system like FLEX or OS-9 but rather RT/68MX and is loaded, compiles and saves to tape. This version can run mulit-task or single task. Then there is a modified version that runs under 6800 FLEX. This version is single task only. Then there appears to be another that I don't have details for yet.
+A/BASIC is a basic compiler for use with RT68mx. The compiled code can be run as a process under  RT68mx. The compiler itself runs as a process.
+
+This is a work in progress. Currently there appear to be a few different 'ABASIC's. One is the ABASIC/RTEDIT that belongs with RT/68MX. This doesn't run under an operating system like FLEX or OS-9 but rather RT/68MX and is loaded, compiles and saves to tape. This version can run mulit-task or single task. We currently have an rtbasic-10c.s19 file (A/BASIC) from the manual. We're working to disassemble the code and will post that here. Then there is a modified version that runs under 6800 FLEX. This version is single task only. Then there appears to be another that I don't have details for yet.
 
 The code in the ABASIC-FLEX directory is the 6800(?) FLEX version.
 
 I'll update this as I get things sorted out better.
+
+# RTEDIT
+
+RTEDIT is an editor that runs under RT68mx that can be used to edit the A/BASIC code.
+
+This is a work in progress. There are some files under the FuFu Flex collection which we think is a modified version to work under Flex. We do have a file: rtedit.s19, which we are in the process if disassembling. We will post the results here.
 
 # Mikbug
 
@@ -55,12 +63,14 @@ MIKBUG allows the user to install an interrupt handler using the M command to sp
 
 # Minibug
 
-FFFE-FFFF - Restart Vectors
-FF80-FFFd - ?
-FF00-FF7F - RAM (6810)
-FE00-FEFF - Minibug
-FCF6-FDFF - ?
-FCF4-FCF5 - UART
+| Range | Function |
+|--|--|
+| FFFE-FFFF | Restart Vectors |
+| FF80-FFFd | ? |
+| FF00-FF7F | RAM (6810) |
+| FE00-FEFF | Minibug |
+| FCF6-FDFF | ? |
+| FCF4-FCF5 | UART |
 
 L
 M
@@ -70,9 +80,9 @@ G
 
 E000-E1FF - Minibug ???
 
-Ignore:
+## Various notes:
 
-Jump table
+### Jump table
 
 The beginning of the monitor ROM consists of a jump table to common routines further into the ROM.
 
@@ -109,9 +119,11 @@ NMIVEC	EQU	$7FFD	NMI INTERUPT VECTOR
 
 The interrupt vectors are a mirror of the CPU vectors. After initialization these all points to an RTI that effectively disables the interrupt. One exception is the SWI vector that points to a stack printout and then back to the monitor prompt. Pressing 'G' will continue execution after an SWI. The three vectors for handling the console I/O are CONSVEC, CONOVEC and CONIVEC. Think of them as stdin and stdout in the Unix world. They point to the routines for the console interface and can be changed and redirected for other output or input. 
 
-CONSVEC - Status vector. Returns the number of characters in buffer in A-acc.
-CONIVEC - Input vector. Returns a character in A-acc.
-CONOVEC - Output vector. Sends a character in A-acc.
+| Command | Function |
+| ------- | -------- |
+| CONSVEC | Status vector. Returns the number of characters in buffer in A-acc. |
+| CONIVEC | Input vector. Returns a character in A-acc. |
+| CONOVEC | Output vector. Sends a character in A-acc. |
 
 Jump table
 The beginning of the monitor ROM consists of a jump table to common routines further into the ROM.
@@ -136,7 +148,7 @@ The reason for using a jump table is that the contents of the monitor ROM can be
 
 I'll be using the MP-02 from https://github.com/crsjones/68Retro . I ordered up some boards from JLCPCB and I'm building those. I also have Corsham SS50 6800 board, which I'll build later. I would expect this code to also work with real SWTPC 6800 processor boards and Motorola MEK6800D2 (with some mods). Fredric Brown of Peripheral Technology also has 6800 boards that should work: https://peripheraltech.com/SWTPC%20Reprodution.htm
 
-# Memory layout
+# Memory layout (WIP)
 
 | Device | Description |
 |--|--|
@@ -267,3 +279,14 @@ Two circuits are shown that can provide a stable, precise clock signal for the R
 ## Note
 
 I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which should allow us to avoid the cutting and bodging of the address lines.
+
+# Source
+
+- FuFu mail list - <mailto:fufu-subscribe@flexusergroup.com>
+- http://www.swtpcemu.com/swtpc/Downloads.htm
+- http://www.flexusergroup.com:8080/
+# Credits
+
+- Microware, creaters of RT68mc & OS9.
+- Stanley Ruppert
+- Micahel EveNson
