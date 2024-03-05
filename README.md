@@ -1,6 +1,15 @@
 # RT68mx
 
-Microware's RT/68MX Real Time OS for the Motorola 6800. 1977
+Microware's RT/68MX Real Time OS for the Motorola 6800 (1977).
+
+RT68mx is a real time OS by Microware. Microware has been kind enough to allow us to make the code available. It's a very interesting OS as it's quite small, about 1K in size, has very little overhead using 128 bytes of RAM for the OS. The rest is for programs/applications/processes.
+
+RT68mx can handle 8 processes.
+
+# Table of Contents
+
+1. [History](#History)
+2. [Note](#Note)
 
 # History
 
