@@ -9,7 +9,7 @@ RT68mx can handle 8 processes.
 # Table of Contents
 
 1. [History](#History)
-2. [Note](#Note)
+2. [Notes](#Notes)
 
 # History
 
@@ -17,7 +17,7 @@ I grew up working with systems such as SWTPC and operating systems such as TSC F
 
 # RT68/MX
 
-This version of RT68mx source code has been modified to specifically assemble properly with the asl macro assembler. I've also taken the liberty to clean up and reformat the source. Sorry I understand why it was done but I've always hated the way the source code looked.
+This version of RT68mx source code has been modified to specifically assemble properly with the asl macro assembler ([links below](#Source)). I've also taken the liberty to clean up and reformat the source. Sorry I understand why it was done but I've always hated the way the source code looked.
 
 RT/68 provides three modes which are mutually exclusive: Console Monitor to load, save and debug programs; Single Task Mode to execute existing Mikbug(TM) software without modification; and Multi-Task Mode which is the real time multiprogramming mode.
 
@@ -256,27 +256,27 @@ Entry points?
 
 The addresses of the RT/68 ROM range from E000 to E3FF. However, the restart and interrupt vectors are also contained in the ROM so it must be able to respond to all addresses
 
-MCM6830 not a 27xx
+MCM6830 is not a 27xx compatible chip
 
- | CPU     | ROM     |
- |---------|---------|
- | A0 - A9 | A0 - A9 |
- | Ph2     | CS0     |
- | R/-W    | CS1     |
- | A15     | CS2     |
- | A13+A14 | CS3     |
+ | CPU     | ROM     | Notes    |
+ |---------|---------|----------|
+ | A0 - A9 | A0 - A9 |          |
+ | Ph2     | CS0     | Ph2 == E |
+ | R/-W    | CS1     |          |
+ | A15     | CS2     |          |
+ | A13+A14 | CS3     |          |
 
 from E000 - FFFF. This menas that address lines A10 through A12 can not be decoded. A circuit that will accomplish this is illustrated above.
 
 If full decode is desired, a separate PROM that has the correct interrupt vectors included can be placed at the top of memory. The vector data is found on the last page of the source listing.
 
-Any circuit that accepts the MC6830L7-L8 Mikbug(TM) ROM will properly decoed the addresses for the RT/68 ROM.
+Any circuit that accepts the MC6830L7-L8 Mikbug(TM) ROM will properly decode the addresses for the RT/68 ROM.
 
 The circuits on the following pages give example configurations for several option features. The abort switch may be connected to the control terminal PIA input CA2. The switch circuit must have a normally low, debounced function. If this feature is not used, ground the CA2 pin.
 
 Two circuits are shown that can provide a stable, precise clock signal for the RT/68 multitask executive, This is also an optional feature. Both circuits cost less than a dollar or so to construct and are extremely simple, but provide an accurate reference signal. This clock signal should be in the range if 10 to 100 Hz for optimum operation.
 
-## Note
+## Notes
 
 I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which should allow us to avoid the cutting and bodging of the address lines.
 
@@ -285,8 +285,10 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 - FuFu mail list - <mailto:fufu-subscribe@flexusergroup.com>
 - http://www.swtpcemu.com/swtpc/Downloads.htm
 - http://www.flexusergroup.com:8080/
+- AS (I call it ASL) - http://john.ccac.rwth-aachen.de:8000/as/
+
 # Credits
 
 - Microware, creaters of RT68mc & OS9.
 - Stanley Ruppert
-- Micahel EveNson
+- Michael Evenson
