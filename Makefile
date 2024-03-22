@@ -40,7 +40,7 @@ mikbug.lst: mikbug.asm asl.inc
 	asl -i .  -L mikbug.asm
 
 mikbug.p: mikbug.asm ascii.inc
-	asl -i . -L mikbug.asm
+	asl -i . -D _E000 -L mikbug.asm
 
 # ------------------------------------------------------------------------------
 #
@@ -56,9 +56,9 @@ minibug.p: minibug.asm ascii.inc
 	asl -i . -L minibug.asm
 
 # ------------------------------------------------------------------------------
-#
+# 
 clean:
-	rm -f *.lst *.p foo bar *~ *.bin *.hex *.s19 dstfile.srec *.srec
+	rm -f *.lst *.p foo bar *~ *.hex dstfile.srec *.srec
 	echo Done
 
 # # Assemble and convert to s19
