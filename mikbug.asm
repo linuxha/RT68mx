@@ -16,12 +16,22 @@
 ;*		CC   B   A   X   P   S
 ;*
 ;*	ADDRESS
+        IFDEF _E000
+ACIACS	EQU	$E000
+ACIADA	EQU	$E001
+	ELSE
 ACIACS	EQU	$8018
 ACIADA	EQU	$8019
+        ENDIF
+;
 ;VAR	EQU	$1F00
 ;*
 ;        ORG    VAR
+	IFDEF _E000
+        ORG	$0080
+	ELSE
         ORG	$1F00
+        ENDIF
 IOV     RMB    2         ;* IO INTERRUPT POINTER
 BEGA    RMB    2         ;* BEGINING ADDR PRINT/PUNCH
 ENDA    RMB    2         ;* ENDING ADDR PRINT/PUNCH
@@ -41,7 +51,16 @@ XTEMP   RMB    2         ;* X-REG TEMP STORAGE
 STACK   RMB    1         ;* STACK POINTER
 ;*
 ;*	OPT	MEMORY
+	IFDEF _E000
+	ORG	$E000           ; EPROM Fill
+; 
+        ;; Fill up to FFD0 with FF
+        dc.b [(*+($E100-*))&$E100-*]$ff
+;
+	ORG	$E100
+        ELSE
 	ORG	$E000
+        ENDIF
 ;*
 ;*	I/O INTERRUPT SEQUENCE
 IO	LDX	IOV
@@ -205,20 +224,26 @@ CONTRL	LDS	#STACK	;* SET CONTRL STACK POINTER
 	BSR	INCH	;* READ CHARACTER
 	TAB
 	BSR	OUTS	;* PRINT SPACE
+;
 	CMPB	#'L'
 	BNE	*+5
 	JMP	LOAD
+;
 	CMPB	#'M'
 	BEQ	CHANGE
+;
 	CMPB	#'R'
 	BEQ	PRINT	;* STACK
+;
 	CMPB	#'P'
 	BEQ	PUNCH	;* PRINT/PUNCH
+;
 	CMPB	#'G'
 	BNE	CONTRL
+;
 	LDS	SP	;* RESTORE PGM'S STACK PTR
 	RTI		;* GO
-	FCB	1,1,1,1,1,1,1,1	;* GRUE
+;	FCB	1,1,1,1,1,1,1,1	;* GRUE
 ;*
 ;*	ENTER FROM SOFTWARE INTERRUPT
 SFE	EQU	*
@@ -247,7 +272,7 @@ C2	BRA	CONTRL
 ;*	PUNCH FROM BEGINING ADDRESS (BEGA) THRU ENDI
 ;*	ADDRESS (ENDA)
 MTAPE1	FCB	$D,$A,'S','1',4	;* PUNCH FORMAT
-	FCB	1,1,1,1	;* GRUE
+;	FCB	1,1,1,1	;* GRUE
 PUNCH	EQU	*
 	LDX	BEGA
 	STX	TW	;* TEMP BEGINING ADDRESS
@@ -299,14 +324,14 @@ PUN32	BSR	PUNT2	;* PUNCH ONE BYTE (2 FRAMES)
 PUNT2	ADDB	0,X	;* UPDATE CHECKSUM
 	JMP	OUT2H	;* OUTPUT TWO HEX CHAR AND RTS
 ;*
-	FCB	1,1,1,1,1,1	;* GRUE
-MCL	FCB	$D,$A,'*',4
-	FCB	1,1,1,1	;* GRUE
+;	FCB	1,1,1,1,1,1	;* GRUE
+MCL	FCB	$D,$A,'*',$20,4
+;	FCB	1,1,1,1	;* GRUE
 ;*
 ;*	SAVE X REGISTER
 SAV	STX	XTEMP
 	RTS
-	FCB	1,1,1	;* GRUE
+;	FCB	1,1,1	;* GRUE
 ;*
 ;*	INPUT ONE CHAR INTO A-REGISTER
 INEEE
@@ -320,9 +345,9 @@ IN1	LDAA	ACIACS
 	BEQ	IN1	;* IF RUBOUT, GET NEXT CHAR
 	BSR	OUTEEE
 	RTS
-	FCB	1,1,1,1,1,1,1,1	;* GRUE
-	FCB	1,1,1,1,1,1,1,1	;* GRUE
-	FCB	1	;* GRUE
+;	FCB	1,1,1,1,1,1,1,1	;* GRUE
+;	FCB	1,1,1,1,1,1,1,1	;* GRUE
+;	FCB	1	;* GRUE
 ;*
 ;*	OUTPUT ONE CHAR 
 OUTEEE	PSH	A
@@ -334,9 +359,14 @@ OUTEEE1	LDAA	ACIACS
 ;	STA A	ACIADA
 	STAA 	ACIADA
 	RTS
+; 
+        ;; Fill up to FFD0 with FF
+        dc.b [(*+($FFF8-*))&$FFF8-*]$ff
+;
 ;*
 ;*	VECTOR
-VECTORS	ORG	$FFF8
+VECTORS	ORG	$FFF8           ; EPROM Fill
+;
 IRQ	FDB	IO
 SWI	FDB	SFE
 NMI	FDB	POWDWN
@@ -344,7 +374,13 @@ RESET	FDB	START
 
         END
 ;* =[ Fini ]====================================================================
-
+;asl -i . -D _E000 -L mikbug.asm
+;p2hex +5 -e 0xE1C6 -F Moto -r '$-$' mikbug.p mikbug.s19
+;STR=$(bash ./s0.sh "Mikbug 6800")
+;sed -i "s/S0030000FC/${STR}/" mikbug.s19
+;srec_info mikbug.s19 
+;miniprohex --offset -0xE000 -p AT28C64B -w mikbug.s19
+;
 ;/* Local Variables: */
 ;/* mode: asm        */
 ;/* End:             */
