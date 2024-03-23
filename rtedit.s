@@ -1,77 +1,162 @@
-f9dasm: M6800/1/2/3/8/9 / H6309 Binary/OS9/FLEX9 Disassembler V1.83
-Loaded binary file rtedit.bin
+; f9dasm: M6800/1/2/3/8/9 / H6309 Binary/OS9/FLEX9 Disassembler V1.83
+; Loaded binary file rtedit.bin
+
+;* MEMORY DEFINITIONS
+;
+;* RT/68 EXECUTIVE USES 12 BYTES OF RAM
+;* BEGINNING AT 0, THESE ARE NOT NEEDED
+;* IN SINGLE TASK MODE AND MAY BE
+;* USED FOR ANY OTHER PURPOSE.
+	ORG  0 		;*
+SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC        0000
+CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE        0001
+TIMREM	RMB  1  	;* TASK TIME REMAINING          0002
+TSKTMR	RMB  2  	;* TIMED TASK COUNTER           0003
+CLOCK	RMB  2  	;* RT CLOCK COUNTER             0005
+INTREQ	RMB  1  	;* INTERRUPT REQUEST FLAG       0007
+TSKTMP	RMB  1  	;* RT EXEC TEMP VAL             0008
+PTYTMP	RMB  1  	;* RT EXEC TEMP VAL             0009
+TIMTSK	RMB  1  	;* TIMED TASK INTR STATUS       000A
+SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL           000B
+
+	ORG  $A000	;* 
+;	ORG  RAM	;* 
+IRQTSK	RMB  2  	;* IRQ TASK/VECTOR
+BEGADR	RMB  2  	;* 
+ENDADR	RMB  2  	;* 
+NMITSK	RMB  2  	;* NMI TASK/VECTOR
+SPTMP	RMB  2  	;* SP TMP VAL
+RTMOD	RMB  1  	;* RT MODE FLAG
+BKPOP	RMB  1  	;* BKPT OPCODE/FLAG
+BKPADR	RMB  2  	;* BKPT ADDRESS
+RELFLG	RMB  1  	;* SWI FLAG
+ERRFLG	RMB  1  	;* ERROR FLAG/CODE
+XTMP	RMB  2  	;* 
+IOVECT	RMB  2  	;* ACIA ADDRESS VECTOR
+
+	ORG  $A042	;* 
+STACK	EQU  *  	;* MONITOR STACK
+
+;* TASK STATUS TABLE
+;*
+;* CONSISTS OF 16 3-BYTE TASK STATUS WORDS, ONE FOR
+;* EACH POSSIBLE TASK. EACH TASK STATUS WORD CONTAINS
+;* A TASK STATUS BYTE (TSB) AND A 2-BYTE TASK STACK
+;* POINTER (TSP)
+;*
+;* THE TSB IS DEFINED AS FOLLOWS:
+;*
+;*	BIT 7	1=TASK ON	0=TASK OFF
+;*	BIT 6-3	TIME LIMIT IN TICKS (0-15)
+;*	BIT 2-0	TASK PRIORITY (0-7)
+;*
+;* THE TSP IS THE VALUE OF THE TASK'S STACK
+;* POINTER FOLLOWING THE LAST INTERRUPT, AND
+;* THEREFORE POINTS TO THE COMPLETE MPU
+;* REGISTER CONTENTS AT THE TIME THE TASK WAS
+;* INTERRUPTED. TO RESTART A TASK THE EXEC
+;* INITIALIZES THE SP FROM THE TSP AND
+;* EXECUTES AN RTI INSTRUCTION
+;*
+	ORG  $A050	;* 
+TSKTBL	RMB  48  	;* 
+
+;* DEFINE PERIPHERIAL REGISTERS
+	ORG  $8004	;* 
+PIADA	RMB  1  	;* 
+PIACA	RMB  1  	;* 
+PIADB	RMB  1  	;* 
+PIACB	RMB  1  	;* 
+ACIACS	RMB  1  	;* 
+ACIADB	RMB  1  	;* 
 
 ;****************************************************
 ;* Used Labels                                      *
 ;****************************************************
 
-M0020   EQU     $0020
-M0022   EQU     $0022
-M0024   EQU     $0024
-M0026   EQU     $0026
-M0027   EQU     $0027
-M0028   EQU     $0028
-M0029   EQU     $0029
-M002A   EQU     $002A
-M002B   EQU     $002B
-M002C   EQU     $002C
-M002D   EQU     $002D
-M002F   EQU     $002F
-M0030   EQU     $0030
-M0031   EQU     $0031
-M0032   EQU     $0032
-M0033   EQU     $0033
-M0034   EQU     $0034
-M0035   EQU     $0035
-M0036   EQU     $0036
-M0056   EQU     $0056
-M0057   EQU     $0057
-M0058   EQU     $0058
-M0059   EQU     $0059
-M005A   EQU     $005A
-M005B   EQU     $005B
-M005C   EQU     $005C
-M005D   EQU     $005D
-M005E   EQU     $005E
-M005F   EQU     $005F
-M0060   EQU     $0060
-M0061   EQU     $0061
-M0062   EQU     $0062
-M0063   EQU     $0063
-M0064   EQU     $0064
-M0065   EQU     $0065
-M0066   EQU     $0066
-M0067   EQU     $0067
-M0068   EQU     $0068
-M0069   EQU     $0069
-M006A   EQU     $006A
-M006B   EQU     $006B
-M006C   EQU     $006C
-M006D   EQU     $006D
-M006E   EQU     $006E
-M006F   EQU     $006F
-M0070   EQU     $0070
-M0071   EQU     $0071
-Z0FE2   EQU     $0FE2
+        ORG     $0020
+
+M0020   RMB     2               ;* EQU     $0020
+M0022   RMB     2               ;* EQU     $0022
+M0024   RMB     2               ;* EQU     $0024
+M0026   RMB     1               ;* EQU     $0026
+;
+M0027   RMB     1               ;* EQU     $0027 Hi
+M0028   RMB     1               ;* EQU     $0028 Lo
+;
+M0029   RMB     1               ;* EQU     $0029
+M002A   RMB     1               ;* EQU     $002A
+M002B   RMB     1               ;* EQU     $002B
+M002C   RMB     1               ;* EQU     $002C
+M002D   RMB     1               ;* EQU     $002D
+M002F   RMB     1               ;* EQU     $002F
+M0030   RMB     1               ;* EQU     $0030
+M0031   RMB     1               ;* EQU     $0031
+M0032   RMB     1               ;* EQU     $0032
+M0033   RMB     1               ;* EQU     $0033
+M0034   RMB     1               ;* EQU     $0034
+M0035   RMB     1               ;* EQU     $0035
+;
+M0036   RMB     20              ;* EQU     $0036
+M0056   RMB     1               ;* EQU     $0056
+;
+M0057   RMB     1               ;* EQU     $0057
+M0058   RMB     1               ;* EQU     $0058
+M0059   RMB     1               ;* EQU     $0059
+M005A   RMB     1               ;* EQU     $005A
+M005B   RMB     1               ;* EQU     $005B
+M005C   RMB     1               ;* EQU     $005C
+M005D   RMB     1               ;* EQU     $005D
+M005E   RMB     1               ;* EQU     $005E
+M005F   RMB     1               ;* EQU     $005F
+M0060   RMB     1               ;* EQU     $0060
+M0061   RMB     1               ;* EQU     $0061
+M0062   RMB     1               ;* EQU     $0062
+M0063   RMB     1               ;* EQU     $0063
+M0064   RMB     1               ;* EQU     $0064
+M0065   RMB     1               ;* EQU     $0065
+M0066   RMB     1               ;* EQU     $0066
+M0067   RMB     1               ;* EQU     $0067
+M0068   RMB     1               ;* EQU     $0068
+M0069   RMB     1               ;* EQU     $0069
+M006A   RMB     1               ;* EQU     $006A
+M006B   RMB     1               ;* EQU     $006B
+M006C   RMB     1               ;* EQU     $006C
+M006D   RMB     1               ;* EQU     $006D
+M006E   RMB     1               ;* EQU     $006E
+M006F   RMB     1               ;* EQU     $006F
+M0070   RMB     1               ;* EQU     $0070
+M0071   RMB     1               ;* EQU     $0071
+	ORG     $0FE2
+Z0FE2   RMB     1               ;* EQU     $0FE2
+
 M1000   EQU     $1000
 M1081   EQU     $1081
 M1300   EQU     $1300
 M1301   EQU     $1301
+
 PIACB   EQU     $8007
-MCF10   EQU     $CF10
-PRSTR   EQU     $E07E
-PRSPC   EQU     $E0CC
-PCRLF   EQU     $E141
-CONSLE  EQU     $E16A
-IN1CHR  EQU     $E350
-OUT1CH  EQU     $E3A6
+
+MCF10   EQU     $CF10           ;* ???
+
+;
+; MIKBUG equates ?
+;
+PRSTR   EQU     $E07E           ;* PDATA ?
+PRSPC   EQU     $E0CC           ;* Print SPC
+PCRLF   EQU     $E141           ;* Print CRLF
+CONSLE  EQU     $E16A           ;* Console (return to console?)
+IN1CHR  EQU     $E350           ;* INEEE ?
+OUT1CH  EQU     $E3A6           ;* OUTEEE ?
 
 ;****************************************************
 ;* Program Code / Data Areas                        *
 ;****************************************************
 
         ORG     $0100
-
+;
+; Not sure how the stack gets setup but there are lots of TSX
+;
 ; ------------------------------------------------------------------------------   
 START   CLRA                             ;0100: 4F             'O'
         LDAB    #$32                     ;0101: C6 32          '.2'
@@ -1765,16 +1850,29 @@ Z0D22   JSR     IN1CHR                   ;0D22: BD E3 50       '..P'
         LDAA    ,X                       ;0D2E: A6 00          '..'
         JSR     OUT1CH                   ;0D30: BD E3 A6       '...'
         BRA     Z0D22                    ;0D33: 20 ED          ' .'
+;
 Z0D35   CMPA    #$18                     ;0D35: 81 18          '..'
         BNE     Z0D50                    ;0D37: 26 17          '&.'
-Z0D39   FCB     $8D,$07                  ;0D39: 8D 07          '..'
-        FCC     " *DEL*"                 ;0D3B: 20 2A 44 45 4C 2A ' *DEL*'
-        FCB     $04                      ;0D41: 04             '.'
+Z0D39   ;CB     $8D,$07                  ;* 0D39: 8D 07          '..'
+        BSR     Z0D42                    ;* NJC added ($8D = BSR)
+;**
+;** This BRA .+$2A jumps into the middle of a BRA inst @ $0D64
+;**    BRA   Z0D22 ; 0D64 20 BC where BC =  CPX
+;**    LDAA  #$20  ; 0D65                   CPX  8620
+;**
+        BRA     .+$2A                    ;* 0D3B: 20 2A @FIXME (.+$2A ???)
+; .+2A is mid BRA @ Z0D65
+;
+; This is very messed up @FIXME:
+;
+        FCC     "DEL"                    ;* 0D3D: 44 45 4C 'DEL'
+;
+        BPL     Z0D46                    ;* 0D40: 2A 04    '*\4'
 ; ------------------------------------------------------------------------------
-        TSX                              ;0D42: 30             '0'
+Z0D42   TSX                              ;0D42: 30             '0'
         LDX     ,X                       ;0D43: EE 00          '..'
-        INS                              ;0D45: 31             '1'
-        INS                              ;0D46: 31             '1'
+Z0D45   INS                              ;0D45: 31             '1'
+Z0D46   INS                              ;0D46: 31             '1'
         JSR     PRSTR                    ;0D47: BD E0 7E       '..~'
         BSR     Z0D58                    ;0D4A: 8D 0C          '..'
         LDX     M0024                    ;0D4C: DE 24          '.$'
@@ -1789,10 +1887,11 @@ Z0D58   LDAA    #$01                     ;0D58: 86 01          '..'
         JMP     PCRLF                    ;0D5C: 7E E1 41       '~.A'
 
 Z0D5F   TSTB                             ;0D5F: 5D             ']'
-        BEQ     Z0D22                    ;0D60: 27 C0          ''.'
+ZD060   BEQ     Z0D22                    ;0D60: 27 C0          ''.'
         INX                              ;0D62: 08             '.'
         DECB                             ;0D63: 5A             'Z'
         BRA     Z0D22                    ;0D64: 20 BC          ' .'
+; BC = 
 Z0D66   LDAA    #$20                     ;0D66: 86 20          '. '
 Z0D68   STX     M0020                    ;0D68: DF 20          '. '
         LDX     M0022                    ;0D6A: DE 22          '."'
@@ -2068,7 +2167,12 @@ Z0EF7   TSX                              ;0EF7: 30             '0'
 ; ------------------------------------------------------------------------------
 ; JMP ,X or 'n' ???
         JMP     ,X                       ;0EFE: 6E 00          'n.'
+; ------------------------------------------------------------------------------
 
+; ------------------------------------------------------------------------------
+;
+; X contains the address of the string to print
+;
 Z0F00   LDAB    #$80                     ;0F00: C6 80          '..'
         BRA     Z0F0B                    ;0F02: 20 07          ' .'
 Z0F04   TSX                              ;0F04: 30             '0'
@@ -2143,6 +2247,8 @@ Z0F69   LDX     M0020                    ;0F69: DE 20          '. '
         LDAB    M002B                    ;0F71: D6 2B          '.+'
         DECB                             ;0F73: 5A             'Z'
         BRA     Z0F41                    ;0F74: 20 CB          ' .'
+; ------------------------------------------------------------------------------
+
 Z0F76   STX     M0027                    ;0F76: DF 27          '.''
         LDX     M0020                    ;0F78: DE 20          '. '
         LDAA    ,X                       ;0F7A: A6 00          '..'
