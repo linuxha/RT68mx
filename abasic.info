@@ -1,0 +1,31 @@
+*
+* srec_cat  abasic.s19 -o abasic.bin -binary
+* f9dasm -6800 -info abasic.info -offset 0100 -begin 0100 -end 1000 abasic.bin |&  sed '/JMP\|BRA\|RTI\|RTS/a ;* -----------------------------------------------------------------------------' |& tee abasic.asm
+* egrep -i 'BCC|BCS|BEQ|BGE|BGT|BHI|BLE|BLS|BLT|BMI|BNE|BPL|BRA|BSR|BVC|BVS|' rtedit.s
+* egrep -i 'JMP|JSR' rtedit.s
+*
+* sed '/JMP\|BRA\|RTI\|RTS/a ;* -----------------------------------------------------------------------------' file
+* RTEDIT Commnads
+* * NEW
+* * RT68
+* * LIST
+* * L,
+* * MEM
+* * F/
+* * LOAD
+* <nnnn> <- Need to find this routing 0=30 9=39 A=41 F=46
+* * SAVE
+* * S,
+* * END
+*
+INSERT 0 \	CPU 6800
+*
+COMMENT 0000 ------------------------------------------------------------------------------
+LABEL   IGNORE
+DATA    0-00F0
+*
+* Can't put anything before the start of the code at 0100
+*
+COMMENT 0100 ------------------------------------------------------------------------------   
+LABEL 0100 START
+*
