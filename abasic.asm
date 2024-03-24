@@ -140,15 +140,15 @@ M5354   EQU     $5354
 PIA1    EQU     $8007
 M8007   EQU     $8007
 
-ZE07E   EQU     $E07E
-ZE0C8   EQU     $E0C8
-ZE0CA   EQU     $E0CA
-ZE0CC   EQU     $E0CC
-ZE0EA   EQU     $E0EA
-ZE141   EQU     $E141
-ZE16A   EQU     $E16A
-ZE350   EQU     $E350
-ZE3A6   EQU     $E3A6
+ZE07E   EQU     $E07E           ;* PDATA1
+ZE0C8   EQU     $E0C8           ;* OUT4HS
+ZE0CA   EQU     $E0CA           ;* OUT2HS
+ZE0CC   EQU     $E0CC           ;* OUTS
+ZE0EA   EQU     $E0EA           ;* TAPAUX Pg 56 RT68MX Manual
+ZE141   EQU     $E141           ;* CRLF
+ZE16A   EQU     $E16A           ;* CONENT (CONTRL?)
+ZE350   EQU     $E350           ;* IN1CHR, INCH, INEEE?
+ZE3A6   EQU     $E3A6           ;* OUT1CH, OUTCH, OUTEEE?
 
 ;****************************************************
 ;* Program Code / Data Areas                        *
