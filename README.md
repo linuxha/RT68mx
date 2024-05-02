@@ -22,6 +22,10 @@ This version of RT68mx source code has been modified to specifically assemble pr
 
 RT/68 provides three modes which are mutually exclusive: Console Monitor to load, save and debug programs; Single Task Mode to execute existing Mikbug(TM) software without modification; and Multi-Task Mode which is the real time multiprogramming mode.
 
+## rt68.asm
+
+This file is just the rt68mx.asm modified to work on the [68Retro](https://github.com/crsjones/68Retro) board. I have the ACIA at $E000, the PIA at $8004 and the ROM from $E000-$FFFF ($E100-$E1FF are for IO). Initial testing suggets this version works. I don't have the cassette tape interface built yet.
+
 # A/BASIC
 
 A/BASIC is a basic compiler for use with RT68mx. The compiled code can be run as a process under  RT68mx. The compiler itself runs as a process.
