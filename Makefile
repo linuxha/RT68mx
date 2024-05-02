@@ -56,6 +56,28 @@ minibug.p: minibug.asm ascii.inc
 	asl -i . -L minibug.asm
 
 # ------------------------------------------------------------------------------
+#
+rt68.s19: rt68.p
+	p2hex +5 -F Moto -r \$$-\$$ rt68.p rt68.s19
+	ls
+	srec_info rt68.s19
+
+rt68.lst: rt68.asm asl.inc
+	asl -i .  -L rt68.asm
+
+rt68.p: rt68.asm ascii.inc
+	asl -i . -L rt68.asm
+
+A:
+	asl -i . -D NEW -L rt68.asm
+	p2hex +5 -F Moto -r \$$-\$$ rt68.p rt68-NEW.s19
+
+B:
+	srec_cat rt68-NEW.s19 -o rt68.s19
+	echo "rt68.s19"
+	memsim2 rt68.s19
+
+# ------------------------------------------------------------------------------
 # 
 clean:
 	rm -f *.lst *.p foo bar *~ *.hex dstfile.srec *.srec
