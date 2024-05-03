@@ -1,0 +1,1163 @@
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 1 - 05/03/2024 06:10:21 PM
+
+
+    1/   0 :                            ;*[ Start ]**********************************************************************
+    2/   0 :                            ;* <ESC> 1 <ESC> ! python3 ~/dev/python/asm-indent.py ~/dev/MC6800/r/rt68mx.asm <ENTER>
+    3/   0 :                            ;* From the original RT68MX canned manual, Pgs B-001-B021
+    4/   0 :                            ;* Modified slightly for use with the ASL assembler uner Linux such as comment
+    5/   0 :                            ;* format and include orgs and assembly should be untouched
+    6/   0 :                            ;*    asl -cpu 6800 rt68mx.s ;p2hex +5 -F Moto -r \$-\$ rt68mx.p rt68mx-t.s19; srec_cat rt68mx-t.s19 -o rt68mx.s19
+    7/   0 :                            ;*
+    8/   0 :                                    include "asl.inc"
+(1)    1/   0 : =>UNDEFINED                 ifndef ASL_INC
+(1)    2/   0 : =$1                     ASL_INC EQU     1
+(1)    3/   0 :                         ;
+(1)    4/   0 :                         opt             macro
+(1)    5/   0 :                                         endm
+(1)    6/   0 :                         
+(1)    7/   0 :                         nam             macro
+(1)    8/   0 :                                         endm
+(1)    9/   0 :                         
+(1)   10/   0 :                         noopt           macro
+(1)   11/   0 :                                         endm
+(1)   12/   0 :                         
+(1)   13/   0 :                         ; This works but you need ttl "xyz abc" 
+(1)   14/   0 :                         ttl             macro a
+(1)   15/   0 :                                         TITLE a
+(1)   16/   0 :                                         endm
+(1)   17/   0 :                         
+(1)   18/   0 :                         spc             macro
+(1)   19/   0 :                                         endm
+(1)   20/   0 :                         
+(1)   21/   0 :                         list            macro
+(1)   22/   0 :                                         listing on
+(1)   23/   0 :                                         endm
+(1)   24/   0 :                         
+(1)   25/   0 :                         nolist          macro
+(1)   26/   0 :                                         listing off
+(1)   27/   0 :                                         endm
+(1)   28/   0 :                         
+(1)   29/   0 :                         page            macro
+(1)   30/   0 :                                         newpage
+(1)   31/   0 :                                         endm
+(1)   32/   0 :                         
+(1)   33/   0 :                         PULD            macro
+(1)   34/   0 :                                         PULA	; Pull the last thing off the stack
+(1)   35/   0 :                                         PULB
+(1)   36/   0 :                                         endm
+(1)   37/   0 :                         
+(1)   38/   0 :                         PSHD            macro
+(1)   39/   0 :                                         PSHB
+(1)   40/   0 :                                         PSHA	; Pus the last thing on the stack
+(1)   41/   0 :                                         endm
+(1)   42/   0 :                         ; ------------------------------------------------------------------------------
+(1)   43/   0 :                         ;
+(1)   44/   0 : =$0                     NULL    EQU $00                 ;
+(1)   45/   0 : =$1                     CTRL_A  EQU $01                 ;
+(1)   46/   0 : =$3                     CTRL_C  EQU $03                 ;
+(1)   47/   0 : =$4                     CTRL_D  EQU $04                 ;
+(1)   48/   0 : =$7                     BELL    EQU $07                 ; Bell
+(1)   49/   0 : =$7                     GTRL_G  EQU $07                 ; Bell
+(1)   50/   0 : =$11                    CTRL_Q  EQU $11                 ; XOFF
+(1)   51/   0 : =$13                    CTRL_S  EQU $13                 ; XON
+(1)   52/   0 : =$15                    CTRL_U  EQU $15                 ; NAK
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s(asl.inc) - Page 2 - 05/03/2024 06:10:21 PM
+
+
+(1)   53/   0 :                         ;
+(1)   54/   0 : =$A                     LF      EQU $0A                 ; ASL allows \n
+(1)   55/   0 : =$D                     CR      EQU $0D                 ; ASL allows \r
+(1)   56/   0 : =$20                    SPC     EQU $20                 ;
+(1)   57/   0 :                         
+(1)   58/   0 : [1]                         endif                       ;* if ASL_INC
+(1)   59/   0 :                         ;/* Local Variables: */
+(1)   60/   0 :                         ;/* mode:asm         */
+(1)   61/   0 :                         ;/* End:             */
+(1)   62/   0 :                         
+    9/   0 :                            ;*
+   10/   0 : (MACRO)                    	NAM  RT68-V2	;* 
+   11/   0 : (MACRO)                    	OPT  O
+   12/   0 :                            ;*
+   13/   0 :                            ;*	****************
+   14/   0 :                            ;*	*	       *
+   15/   0 :                            ;*	*     RT/68    *
+   16/   0 :                            ;*	*      MX      *
+   17/   0 :                            ;*	*	       *
+   18/   0 :                            ;*	****************
+   19/   0 :                            ;*
+   20/   0 :                            ;* RT/68MX REAL TIME OPERATING SYSTEM
+   21/   0 :                            ;* (REVISED VERSION OF RT/68MR)
+   22/   0 :                            ;*
+   23/   0 :                            ;* COPYRIGHT (C) 1976,1977
+   24/   0 :                            ;* THE MICROWARE SYSTEMS CORPORATION
+   25/   0 :                            ;*
+   26/   0 :                            ;* RT/68 LISTING AND OBJECT MAY NOT BE
+   27/   0 :                            ;* REPRODUCED IN ANY FORM WITHOUT
+   28/   0 :                            ;* EXPRESS WRITTEN PERMISSION.
+   29/   0 :                            ;
+   30/   0 :                            ;* MEMORY DEFINITIONS
+   31/   0 :                            ;
+   32/   0 :                            ;* RT/68 EXECUTIVE USES 12 BYTES OF RAM
+   33/   0 :                            ;* BEGINNING AT 0, THESE ARE NOT NEEDED
+   34/   0 :                            ;* IN SINGLE TASK MODE AND MAY BE
+   35/   0 :                            ;* USED FOR ANY OTHER PURPOSE.
+   36/   0 :                            	ORG  0 		;*
+   37/   0 :                            SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC
+   38/   1 :                            CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE
+   39/   2 :                            TIMREM	RMB  1  	;* TASK TIME REMAINING
+   40/   3 :                            TSKTMR	RMB  2  	;* TIMED TASK COUNTER
+   41/   5 :                            CLOCK	RMB  2  	;* RT CLOCK COUNTER
+   42/   7 :                            INTREQ	RMB  1  	;* INTERRUPT REQUEST FLAG
+   43/   8 :                            TSKTMP	RMB  1  	;* RT EXEC TEMP VAL
+   44/   9 :                            PTYTMP	RMB  1  	;* RT EXEC TEMP VAL
+   45/   A :                            TIMTSK	RMB  1  	;* TIMED TASK INTR STATUS
+   46/   B :                            SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL
+   47/   C :                            
+   48/A000 :                            	ORG  $A000	;* 
+   49/A000 :                            IRQTSK	RMB  2  	;* IRQ TASK/VECTOR
+   50/A002 :                            BEGADR	RMB  2  	;* 
+   51/A004 :                            ENDADR	RMB  2  	;* 
+   52/A006 :                            NMITSK	RMB  2  	;* NMI TASK/VECTOR
+   53/A008 :                            SPTMP	RMB  2  	;* SP TMP VAL
+   54/A00A :                            RTMOD	RMB  1  	;* RT MODE FLAG
+   55/A00B :                            BKPOP	RMB  1  	;* BKPT OPCODE/FLAG
+   56/A00C :                            BKPADR	RMB  2  	;* BKPT ADDRESS
+   57/A00E :                            RELFLG	RMB  1  	;* SWI FLAG
+   58/A00F :                            ERRFLG	RMB  1  	;* ERROR FLAG/CODE
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 3 - 05/03/2024 06:10:21 PM
+
+
+   59/A010 :                            XTMP	RMB  2  	;* 
+   60/A012 :                            IOVECT	RMB  2  	;* ACIA ADDRESS VECTOR
+   61/A014 :                            
+   62/A042 :                            	ORG  $A042	;* 
+   63/A042 : =$A042                     STACK	EQU  *  	;* MONITOR STACK
+   64/A042 :                            
+   65/A042 :                            ;* TASK STATUS TABLE
+   66/A042 :                            ;*
+   67/A042 :                            ;* CONSISTS OF 16 3-BYTE TASK STATUS WORDS, ONE FOR
+   68/A042 :                            ;* EACH POSSIBLE TASK. EACH TASK STATUS WORD CONTAINS
+   69/A042 :                            ;* A TASK STATUS BYTE (TSB) AND A 2-BYTE TASK STACK
+   70/A042 :                            ;* POINTER (TSP)
+   71/A042 :                            ;*
+   72/A042 :                            ;* THE TSB IS DEFINED AS FOLLOWS:
+   73/A042 :                            ;*
+   74/A042 :                            ;*	BIT 7	1=TASK ON	0=TASK OFF
+   75/A042 :                            ;*	BIT 6-3	TIME LIMIT IN TICKS (0-15)
+   76/A042 :                            ;*	BIT 2-0	TASK PRIORITY (0-7)
+   77/A042 :                            ;*
+   78/A042 :                            ;* THE TSP IS THE VALUE OF THE TASK'S STACK
+   79/A042 :                            ;* POINTER FOLLOWING THE LAST INTERRUPT, AND
+   80/A042 :                            ;* THEREFORE POINTS TO THE COMPLETE MPU
+   81/A042 :                            ;* REGISTER CONTENTS AT THE TIME THE TASK WAS
+   82/A042 :                            ;* INTERRUPTED. TO RESTART A TASK THE EXEC
+   83/A042 :                            ;* INITIALIZES THE SP FROM THE TSP AND
+   84/A042 :                            ;* EXECUTES AN RTI INSTRUCTION
+   85/A042 :                            ;*
+   86/A050 :                            	ORG  $A050	;* 
+   87/A050 :                            TSKTBL	RMB  48  	;* 
+   88/A080 :                            
+   89/A080 :                            ;* DEFINE PERIPHERIAL REGISTERS
+   90/8004 :                            	ORG  $8004	;* 
+   91/8004 :                            PIADA	RMB  1  	;* 
+   92/8005 :                            PIACA	RMB  1  	;* 
+   93/8006 :                            PIADB	RMB  1  	;* 
+   94/8007 :                            PIACB	RMB  1  	;* 
+   95/8008 :                            ACIACS	RMB  1  	;* 
+   96/8009 :                            ACIADB	RMB  1  	;* 
+   97/800A :                            
+   98/E000 :                            	ORG  $E000	;* 
+   99/E000 : =$E000                     zSTART  EQU  *
+  100/E000 :                            ;* TAPE LOAD SUBROUTINE
+  101/E000 :                            ;*
+  102/E000 :                            ;* READS MIKBUG(TM) FORMATTED OBJECT TAPES
+  103/E000 :                            ;* INTO RAM.
+  104/E000 :                            ;*
+  105/E000 :                            ;* READER DEVICE IS CONTROLLED BY EITHER ASCII
+  106/E000 :                            ;* CONTROL CODES OR PIA READER CONTROL OUTPUT
+  107/E000 :                            ;* OUTPUT.
+  108/E000 :                            ;*
+  109/E000 :                            ;* TWO ERRORS ARE CHECKED: CHECKSUM AND
+  110/E000 :                            ;* NO CHANGE
+  111/E000 : C6 3C                      LOAD	LDAB #$3C	;* TAPE ON CONSTANTS XXXXXXXX
+  112/E002 : 86 11                      	LDAA #$11	;* READER ON CODE
+  113/E004 : 8D 10                      	BSR  RDRCON	;* LET IT ROLL
+  114/E006 : 8D 70                      LOAD2	BSR  INCH	;*
+  115/E008 : 81 53                      	CMPA #'S' 	;* LOOK FOR START OF BLOCK
+  116/E00A : 26 FA                      	BNE  LOAD2	;* BRA IF NOT
+  117/E00C : 8D 6A                      	BSR  INCH	;* 
+  118/E00E : 81 39                      	CMPA #'9' 	;* END OF FILE?
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 4 - 05/03/2024 06:10:21 PM
+
+
+  119/E010 : 26 09                      	BNE  LOAD4	;* BRA IF NOT
+  120/E012 : C6 34                      LOAD3	LDAB #$34	;* TAPE OFF CONSTANTS XXXXXXXX
+  121/E014 : 86 13                      	LDAA #$13	;* 
+  122/E016 : F7 80 07                   RDRCON	STAB PIACB	;* PIA READER CTRL XXXXXXXX
+  123/E019 : 20 5A                      	BRA  OUTCH	;* ASCII TAPE CONTROL
+  124/E01B : 81 31                      LOAD4	CMPA #'1'	;* S1 DATA RECORD? XXXXXXXX
+  125/E01D : 26 E7                      	BNE  LOAD2	;* BRA IF NOT, LOOK AGAIN
+  126/E01F : 5F                         	CLRB		;* ACCB WILL GENERATE CHKSUM
+  127/E020 : 8D 33                      	BSR  BYTE	;* PICK UP BYTE COUNT
+  128/E022 : 80 02                      	SUBA #2 	;* LESS 2 FOR THE BLOCK ADDR
+  129/E024 : B7 A0 02                   LOAD5	STAA BEGADR	;* SAVE IT XXXXXXXX
+  130/E027 : 8D 1E                      	BSR  BADDR	;* GET BLOCK START ADDR IN X
+  131/E029 :                            
+  132/E029 :                            ;* LOOP TO READ DATA BLOCK
+  133/E029 : 8D 2A                      LOAD6	BSR  BYTE	;* GET A DATA BYTE XXXXXXXX
+  134/E02B : 7A A0 02                   	DEC  BEGADR	;* DECR BYTE COUNT
+  135/E02E : 27 09                      	BEQ  LOAD7	;* BRA IF LAST BYTE
+  136/E030 : A7 00                      	STAA 0,X 	;* PUT IN MEMORY
+  137/E032 : A1 00                      	CMPA 0,X 	;* BE SURE IT CHANGED
+  138/E034 : 26 0A                      	BNE  LDMERR	;* BRA TO ERROR- MUST BE ROM!!
+  139/E036 : 08                         	INX		;* NEXT ADDR
+  140/E037 : 20 F0                      	BRA  LOAD6	;* NEXT BYTE
+  141/E039 :                            
+  142/E039 :                            ;* B ADDS CHKSM FROM TAPE TO CALCULATED CHKSUM,
+  143/E039 :                            ;* SO BY ADDING ONE IT SHOULD ZERO
+  144/E039 : 5C                         LOAD7	INCB		;* (LABEL/NM only?)
+  145/E03A : 27 CA                      	BEQ  LOAD2	;* BRA IF IT DID
+  146/E03C : 86 32                      	LDAA #$32	;* TOO BAD, GET THE ERROR CODE
+  147/E03E : 20 02                      	BRA  LODERR	;* 
+  148/E040 : 86 31                      LDMERR	LDAA #$31	;* NO CHANGE ERROR CODE XXXXXXXX
+  149/E042 : B7 A0 0F                   LODERR	STAA ERRFLG	;*
+  150/E045 : 20 CB                      	BRA  LOAD3	;* 
+  151/E047 :                            
+  152/E047 :                            ;* BUILD 4 HEX CHAR VALUE (ADDRESS)
+  153/E047 :                            ;* RETURNS VALUE IN XR
+  154/E047 : 8D 0C                      BADDR	BSR  BYTE	;* INPUT 2 LEFT CHRS XXXXXXXX
+  155/E049 : B7 A0 04                   	STAA ENDADR	;* 
+  156/E04C : 8D 07                      	BSR  BYTE	;* INPUT 2 RIGHT CHRS
+  157/E04E : B7 A0 05                   	STAA ENDADR+1	;* 
+  158/E051 : FE A0 04                   	LDX  ENDADR	;* 
+  159/E054 : 39                         	RTS		;* 
+  160/E055 :                            
+  161/E055 :                            ;* INPUT A BYTE (2 HEX CHARS)
+  162/E055 :                            ;* RETURNS BINARY VALUE IN ACC A
+  163/E055 :                            
+  164/E055 : 37                         BYTE	PSHB		;* INPUT 2 HEX CHAR XXXXXXXX
+  165/E056 : 8D 52                      	BSR  INHEX	;* LEFT HEX CHAR
+  166/E058 : 48                         	ASLA		;* 
+  167/E059 : 48                         	ASLA		;* 
+  168/E05A : 48                         	ASLA		;* 
+  169/E05B : 48                         	ASLA		;* 
+  170/E05C : 16                         	TAB		;* 
+  171/E05D : 8D 4B                      	BSR  INHEX	;* RIGHT HEX CHAR
+  172/E05F : 1B                         	ABA		;* 
+  173/E060 : 33                         	PULB		;* 
+  174/E061 : 36                         	PSHA		;* 
+  175/E062 : 1B                         	ABA		;* 
+  176/E063 : 16                         	TAB		;* 
+  177/E064 : 32                         	PULA		;* 
+  178/E065 : 39                         	RTS		;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 5 - 05/03/2024 06:10:21 PM
+
+
+  179/E066 : 01                         	NOP		;* 
+  180/E067 :                            
+  181/E067 :                            ;* HEX OUTPUT AUX SUBROUTINES
+  182/E067 : 44                         OUTHL	LSRA		;* (LABEL/NM only?)
+  183/E068 : 44                         	LSRA		;* 
+  184/E069 : 44                         	LSRA		;* 
+  185/E06A : 44                         	LSRA		;* 
+  186/E06B : 84 0F                      OUTHR	ANDA #$F  	;*
+  187/E06D : 8B 30                      	ADDA #$30	;* 
+  188/E06F : 81 39                      	CMPA #$39	;* 
+  189/E071 : 23 02                      	BLS  OUTCH	;* 
+  190/E073 : 8B 07                      	ADDA #$7 	;* 
+  191/E075 :                            
+  192/E075 : 7E E3 A6                   OUTCH	JMP  OUT1CH	;*
+  193/E078 : 7E E3 50                   INCH	JMP  IN1CHR	;*
+  194/E07B :                            
+  195/E07B :                            ;* PRINT DATA STRING POINTED TO BY XR
+  196/E07B :                            ;* AND ENDING WITH ASCII EOT ($04)
+  197/E07B : 8D F8                      PDATA2	BSR  OUTCH	;*
+  198/E07D : 08                         	INX		;* 
+  199/E07E : A6 00                      PDATA1	LDAA 0,X	;* SUBR ENTRY POINT XXXXXXXX
+  200/E080 : 81 04                      	CMPA #4 	;* 
+  201/E082 : 26 F7                      	BNE  PDATA2	;* 
+  202/E084 : 39                         	RTS		;* 
+  203/E085 :                            
+  204/E085 :                            ;*
+  205/E085 :                            ;* CONSOLE MEMORY DUMP SUBROUTINE
+  206/E085 :                            ;*
+  207/E085 :                            ;* PRINTS BEG ADDR AND 16 BYTES OF DATA ON EACH LINE
+  208/E085 :                            ;* STARTING ADDR IN BEGADR
+  209/E085 :                            ;* ENDING ADDR IN ENDADR
+  210/E085 :                            ;*
+  211/E085 : BD E1 41                   DUMP	JSR  CRLF	;* CR AND LF XXXXXXXX
+  212/E088 : CE A0 02                   	LDX  #BEGADR	;* 
+  213/E08B : 8D 3B                      	BSR  OUT4HS	;* PRINT BEGINNING ADDR
+  214/E08D : C6 10                      	LDAB #16 	;* BYTE COUNT FOR LINE
+  215/E08F : FE A0 02                   	LDX  BEGADR	;* GET BEG ADDR
+  216/E092 : 8D 36                      DUMP1	BSR  OUT2HS	;* PRINT A BYTE XXXXXXXX
+  217/E094 : 09                         	DEX		;* 
+  218/E095 : BC A0 04                   	CPX  ENDADR	;* DONE YET?
+  219/E098 : 26 01                      	BNE  DUMP2	;* BRA IF NOT
+  220/E09A : 39                         	RTS		;* 
+  221/E09B : 08                         DUMP2	INX		;* ADV X TO NEXT BYTE XXXXXXXX
+  222/E09C : 5A                         	DECB		;* DEC LINE BYTE COUNT
+  223/E09D : 26 F3                      	BNE  DUMP1	;* BRA IF LINE NOT DONE
+  224/E09F : FF A0 02                   	STX  BEGADR	;* UPDATE BEGADR TO CURRENT ADDR
+  225/E0A2 : 20 E1                      	BRA  DUMP	;* 
+  226/E0A4 :                            
+  227/E0A4 : 86 33                      HBAD	LDAA #$33	;* INHEX ERROR RETURN XXXXXXXX
+  228/E0A6 : B7 A0 0F                   	STAA ERRFLG	;* 
+  229/E0A9 : 39                         	RTS		;* 
+  230/E0AA :                            
+  231/E0AA :                            ;* INPUT HEX CHARACTER, IF CHAR IS NOT
+  232/E0AA :                            ;* HEX, THE ERROR FLAG IS SET TO THE
+  233/E0AA :                            ;* ERROR CODE ($33 - ASCII 1)
+  234/E0AA : 8D CC                      INHEX	BSR  INCH	;* INPUT ONE HEX CHAR XXXXXXXX
+  235/E0AC : 80 30                      	SUBA #$30	;* 
+  236/E0AE : 25 F4                      	BCS  HBAD	;* 
+  237/E0B0 : 81 09                      	CMPA #9 	;* 
+  238/E0B2 : 23 08                      	BLS  IHRET	;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 6 - 05/03/2024 06:10:21 PM
+
+
+  239/E0B4 : 80 07                      	SUBA #7 	;* 
+  240/E0B6 : 25 EC                      	BCS  HBAD	;* 
+  241/E0B8 : 81 0F                      	CMPA #15 	;* 
+  242/E0BA : 22 E8                      	BHI  HBAD	;* 
+  243/E0BC : 39                         IHRET	RTS		;* (LABEL/NM only?)
+  244/E0BD :                            
+  245/E0BD : 01                         	NOP		;* 
+  246/E0BE : 01                         	NOP		;* 
+  247/E0BF :                            
+  248/E0BF :                            ;* OUTPUT BYTE (TWO HEX CHARS) POINTED
+  249/E0BF :                            ;* TO BY XR
+  250/E0BF : A6 00                      OUT2H	LDAA 0,X  	;*
+  251/E0C1 : 8D A4                      	BSR  OUTHL	;* 
+  252/E0C3 : A6 00                      	LDAA 0,X 	;* 
+  253/E0C5 : 08                         	INX		;* 
+  254/E0C6 : 20 A3                      	BRA  OUTHR	;* 
+  255/E0C8 :                            
+  256/E0C8 :                            ;* OUTPUT 4 HEX CHARS AND SPACE
+  257/E0C8 : 8D F5                      OUT4HS	BSR  OUT2H	;*
+  258/E0CA :                            
+  259/E0CA :                            ;* OUTOUT 2 HEX CHARS AND SPACE
+  260/E0CA : 8D F3                      OUT2HS	BSR  OUT2H	;*
+  261/E0CC :                            
+  262/E0CC :                            ;* OUTPUT A SPACE
+  263/E0CC : 86 20                      OUTS	LDAA #$20	;*
+  264/E0CE : 20 A5                      BOUT	BRA  OUTCH	;*
+  265/E0D0 :                            
+  266/E0D0 :                            ;* PRINT CONTENTS OF STACK
+  267/E0D0 :                            ;* FORMAT:
+  268/E0D0 :                            ;* SP CC B A XR PC
+  269/E0D0 : 8D 6F                      PRSTAK	BSR  CRLF	;* PRINT CF+LF XXXXXXXX
+  270/E0D2 : CE A0 08                   	LDX  #SPTMP	;* 
+  271/E0D5 : 8D F1                      	BSR  OUT4HS	;* PRINT SP
+  272/E0D7 : FE A0 08                   	LDX  SPTMP	;* 
+  273/E0DA : 08                         PRSTK	INX		;* ENTRY TO PRINT TASK STACK XXXXXXXX
+  274/E0DB : 8D ED                      	BSR  OUT2HS	;* PRINT CC
+  275/E0DD : 8D EB                      	BSR  OUT2HS	;* PRINT ACC B
+  276/E0DF : 8D E9                      	BSR  OUT2HS	;* PRINT ACC A
+  277/E0E1 : 20 03                      	BRA  PRSTK2	;* BRA OVER PATCH
+  278/E0E3 : 7E E1 6A                   CONTRL	JMP  CONENT	;* PATCH FOR ADDR ALIGNMENT XXXXXXXX
+  279/E0E6 : 8D E0                      PRSTK2	BSR  OUT4HS	;* PRINT XR XXXXXXXX
+  280/E0E8 : 20 DE                      	BRA  OUT4HS	;* PRINT PC +RTS
+  281/E0EA :                            
+  282/E0EA :                            ;* WRITE OBJECT TAPE SUBROUTINE
+  283/E0EA :                            ;*
+  284/E0EA :                            ;* GENERATES MIKBUG(TM) FORMATTED TAPES
+  285/E0EA :                            ;* ON SYSTEM TAPE DEVICE (PAPER TAPE,
+  286/E0EA :                            ;* AUDIO CASSETTE, ETC.)
+  287/E0EA :                            ;*
+  288/E0EA :                            ;* BEGINNING ADDRESS OF DATA IN "BEGADR"
+  289/E0EA :                            ;* ENDING ADDRESS IN "ENDADR"
+  290/E0EA :                            ;*
+  291/E0EA :                            ;* ENTRY POINT IS "TAPOUT" - E0EE
+  292/E0EA :                            ;
+  293/E0EA :                            ;* AUX. SUBR. TO OUTPUT BYTE + UPDATE
+  294/E0EA :                            ;* CHECKSUM.
+  295/E0EA : EB 00                      TAPAUX	ADDB 0,X  	;*
+  296/E0EC : 20 D1                      	BRA  OUT2H	;* 
+  297/E0EE :                            
+  298/E0EE : 86 12                      TAPOUT	LDAA #$12	;* TAPE ON CODE XXXXXXXX
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 7 - 05/03/2024 06:10:21 PM
+
+
+  299/E0F0 : 8D 83                      	BSR  OUTCH	;* 
+  300/E0F2 :                            ;* OUTPUT 60 NULL CHARS TO GENERATE
+  301/E0F2 :                            ;* EITHER A 6" LEADER FOR PAPER TAPE "
+  302/E0F2 :                            ;* OR A 2 SECOND TAPE SPEEDUP DELAY
+  303/E0F2 :                            ;* (AT 30CPS) FOR AUDIO CASSETTES
+  304/E0F2 : C6 3C                      	LDAB #60 	;* LEADER/DELAY NULL COUNT
+  305/E0F4 : 4F                         OUTLDR	CLRA		;* (LABEL/NM only?)
+  306/E0F5 : 8D 12                      	BSR  JOUT1C	;* 
+  307/E0F7 : 5A                         	DECB		;* 
+  308/E0F8 : 26 FA                      	BNE  OUTLDR	;* 
+  309/E0FA :                            
+  310/E0FA :                            ;* SUBTRACT BEGADR FROM ENDADR
+  311/E0FA : CE A0 02                   TOUT1	LDX  #BEGADR	;*
+  312/E0FD : A6 02                      	LDAA 2,X 	;* 
+  313/E0FF : E6 03                      	LDAB 3,X 	;* 
+  314/E101 : E0 01                      	SUBB 1,X 	;* 
+  315/E103 : A2 00                      	SBCA 0,X 	;* 
+  316/E105 : 24 05                      	BCC  TOUT2	;* BRA IF BEG < END TO DUMP
+  317/E107 : 86 14                      	LDAA #$14	;* PUNCH OFF CODE
+  318/E109 : 7E E0 75                   JOUT1C	JMP  OUTCH	;*
+  319/E10C :                            
+  320/E10C :                            ;* CALCULATE BYTE COUNT
+  321/E10C : 26 04                      TOUT2	BNE  TOUT3	;* BRA IF HIGH BYTE NONZERO XXXXXXXX
+  322/E10E : C1 10                      	CMPB #16 	;* 
+  323/E110 : 25 02                      	BCS  TOUT4	;* BRA IF BLOCK < 16 BYTES
+  324/E112 : C6 0F                      TOUT3	LDAB #15	;* SET FULL BLOCK XXXXXXXX
+  325/E114 : CB 04                      TOUT4	ADDB #4		;* ADD FOR B.C. + BEG ADDR. XXXXXXXX
+  326/E116 :                            
+  327/E116 :                            ;* OUTPUT BLOCK HEADER
+  328/E116 : 8D 29                      	BSR  CRLF	;* OUTPUT CR,LF,NULLS
+  329/E118 : 08                         	INX		;* 
+  330/E119 : 8D 29                      	BSR  JPDATA	;* OUTPUT S,1
+  331/E11B : 37                         	PSHB		;* SAVE BYTE COUNT
+  332/E11C : 30                         	TSX		;* 
+  333/E11D : 5F                         	CLRB		;* CLEAR CHECKSUM
+  334/E11E : 8D CA                      	BSR  TAPAUX	;* PRINT BYTE CNT
+  335/E120 : 32                         	PULA		;* 
+  336/E121 : 80 03                      	SUBA #3 	;* UPDATE BYTE COUNT
+  337/E123 : 36                         	PSHA		;* 
+  338/E124 : CE A0 02                   	LDX  #BEGADR	;* 
+  339/E127 : 8D C1                      	BSR  TAPAUX	;* OUTPUT BEG. ADDR
+  340/E129 : 8D BF                      	BSR  TAPAUX	;* 
+  341/E12B :                            
+  342/E12B :                            ;* LOOP TO OUTPUT ONE BLOCK OF DATA
+  343/E12B : FE A0 02                   	LDX  BEGADR	;* XR POINTS TO CURRENT DATA BYT
+  344/E12E : 8D BA                      TOUT5	BSR  TAPAUX	;* OUTPUT BYTE XXXXXXXX
+  345/E130 : 32                         	PULA		;* 
+  346/E131 : 4A                         	DECA		;* DECR BYTE COUNT
+  347/E132 : 36                         	PSHA		;* 
+  348/E133 : 26 F9                      	BNE  TOUT5	;* BRA IF BYTE CNT NOT ZERO
+  349/E135 :                            
+  350/E135 : 31                         	INS		;* 
+  351/E136 : FF A0 02                   	STX  BEGADR	;* SAVE CURRENT ADDR
+  352/E139 : 53                         	COMB		;* COMPL CHKSUM
+  353/E13A : 37                         	PSHB		;* 
+  354/E13B : 30                         	TSX		;* 
+  355/E13C : 8D AC                      	BSR  TAPAUX	;* OUTPUT CHKSUM
+  356/E13E : 31                         	INS		;* 
+  357/E13F : 20 B9                      	BRA  TOUT1	;* 
+  358/E141 :                            
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 8 - 05/03/2024 06:10:21 PM
+
+
+  359/E141 :                            ;* SUBROUTINE TO PRINT CR + LF
+  360/E141 : CE E3 D0                   CRLF	LDX  #CRLSTR	;*
+  361/E144 : 7E E0 7E                   JPDATA	JMP  PDATA1	;*
+  362/E147 :                            
+  363/E147 :                            ;* RT/68 CONSOLE MONITOR PROGRAM
+  364/E147 :                            ;*
+  365/E147 :                            ;* ACCEPTS COMMANDS FORM THE CONSOLE DEVICE
+  366/E147 :                            ;* AND EXECUTES THE APPROPRIATE FUNCTION.
+  367/E147 :                            ;
+  368/E147 :                            ;* ENTRY POINT FOR RESTART
+  369/E147 : 8E A0 42                   INIT	LDS  #STACK	;* INITIALIZE PERIPHERALS XXXXXXXX
+  370/E14A : BF A0 08                   	STS  SPTMP	;* 
+  371/E14D : CE 80 00                   	LDX  #$8000	;* 
+  372/E150 : FF A0 12                   	STX  IOVECT	;* INIT ACIA VECTOR
+  373/E153 :                            ;* INITIALIZE CONTROL PIA
+  374/E153 : 6C 04                      	INC  4,X 	;* 
+  375/E155 : C6 16                      	LDAB #$16	;* 
+  376/E157 : E7 05                      	STAB 5,X 	;* 
+  377/E159 : 6C 04                      	INC  4,X 	;* 
+  378/E15B : 86 05                      	LDAA #$05	;* 
+  379/E15D : A7 06                      	STAA 6,X 	;* 
+  380/E15F : 86 34                      	LDAA #$34	;* 
+  381/E161 : A7 07                      	STAA 7,X 	;* 
+  382/E163 :                            ;* INITIALIZE ACIA AT $8000
+  383/E163 : 86 03                      	LDAA #3 	;* 
+  384/E165 : A7 00                      	STAA 0,X 	;* 
+  385/E167 : 5A                         	DECB		;* 
+  386/E168 : E7 00                      	STAB 0,X 	;* SET ACIA CSR
+  387/E16A : 7F A0 0B                   CONENT	CLR  BKPOP	;* CONSOLE ROUTINE ENTRY POINT XXXXXXXX
+  388/E16D : 7F A0 0A                   	CLR  RTMOD	;* 
+  389/E170 : 7F A0 0F                   CONSOL	CLR  ERRFLG	;*
+  390/E173 : 8E A0 42                   	LDS  #STACK	;* INIT SP
+  391/E176 : 8D C9                      	BSR  CRLF	;* 
+  392/E178 : 86 24                      	LDAA #'$' 	;* PRINT PROMPT
+  393/E17A : 8D 55                      	BSR  OUTEEE	;* 
+  394/E17C : 8D 2E                      	BSR  INEEE	;* INPUT COMMAND CODE
+  395/E17E :                            
+  396/E17E :                            ;* COMMAND TABLE LOOKUP/EXECUTE LOOP
+  397/E17E :                            ;* SEARCHES FOR COMMAND CODE ON TABLE TO OBTAIN
+  398/E17E :                            ;* FUNCTION SUBROUTINE ADDRESS.
+  399/E17E : CE E3 D6                   	LDX  #CMDTBL-3	;* INIT X TO BEGINNING OF TABL
+  400/E181 : 08                         CMSRCH	INX  		;* ADV TO NEXT ENTRY XXXXXXXX
+  401/E182 : 08                         	INX		;* 
+  402/E183 : 08                         	INX		;* 
+  403/E184 : E6 00                      	LDAB 0,X 	;* GET CODE FROM TABLE
+  404/E186 : 27 0B                      	BEQ  CMDERR	;* IF ZERO, END OF TABLE
+  405/E188 : 11                         	CBA		;* COMMAND CODE MATCH COMPARE
+  406/E189 : 26 F6                      	BNE  CMSRCH	;* BACK TO ADV IF NOT
+  407/E18B : EE 01                      	LDX  1,X 	;* GET CMND SUBR ADDR FROM TABLE
+  408/E18D : AD 00                      	JSR  0,X 	;* DO IT
+  409/E18F : 8D 57                      TSTENT	BSR  ERTEST	;* TEST FOR ERROR XXXXXXXX
+  410/E191 : 20 DD                      GOCON	BRA  CONSOL	;* GET ANOTHER CMND XXXXXXXX
+  411/E193 :                            
+  412/E193 : C6 36                      CMDERR	LDAB #'6'	;* ILLEGAL COMMAND CODE XXXXXXXX
+  413/E195 : 20 56                      	BRA  ERROR	;* 
+  414/E197 :                            
+  415/E197 :                            ;* SUBR TO SET 0R REMOVE BREAKPOINTS
+  416/E197 : B6 A0 0B                   SETBKP	LDAA BKPOP	;* GET BKPT FLAG OR OPCODE XXXXXXXX
+  417/E19A : 27 0A                      	BEQ  SBRET	;* IF = 0, NO BKPT ACTIVE
+  418/E19C : FE A0 0C                   	LDX  BKPADR	;* GET ADDR
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 9 - 05/03/2024 06:10:21 PM
+
+
+  419/E19F :                            ;* SWAP FLAG/OPCODE
+  420/E19F : E6 00                      	LDAB 0,X 	;* 
+  421/E1A1 : A7 00                      	STAA 0,X 	;* 
+  422/E1A3 : F7 A0 0B                   	STAB BKPOP	;* 
+  423/E1A6 : 39                         SBRET	RTS		;* (LABEL/NM only?)
+  424/E1A7 :                            
+  425/E1A7 :                            ;* "D" DUMP COMMAND
+  426/E1A7 : 8D 2B                      DMPCOM	BSR  GET2AD	;*
+  427/E1A9 : 7E E0 85                   	JMP  DUMP	;* 
+  428/E1AC :                            
+  429/E1AC : 7E E3 50                   INEEE	JMP  IN1CHR	;*
+  430/E1AF :                            
+  431/E1AF :                            ;* SUBR TO PREPARE FOR USER PROGRAM
+  432/E1AF :                            ;* EXECUTION. CALLED BY G, E, & S COMMANDS
+  433/E1AF :                            ;*
+  434/E1AF : 8D E6                      SETRUN	BSR  SETBKP	;* SET BKPT IF ANY XXXXXXXX
+  435/E1B1 : C6 1E                      	LDAB #$1E	;* 
+  436/E1B3 : B6 A0 0A                   	LDAA RTMOD	;* TEST IF MULTITASK MODE
+  437/E1B6 : 27 04                      	BEQ  SETRN2	;* BRA IF NOT MULTI
+  438/E1B8 : 5C                         	INCB		;* ENABLE RT CLOCK INTR
+  439/E1B9 : 4F                         	CLRA		;* 
+  440/E1BA : 97 00                      	STAA SYSMOD	;* 
+  441/E1BC : B6 80 04                   SETRN2	LDAA PIADA	;*
+  442/E1BF : F7 80 05                   	STAB PIACA	;* 
+  443/E1C2 : 39                         RETURN	RTS		;* (LABEL/NM only?)
+  444/E1C3 :                            
+  445/E1C3 :                            ;* "B" BREAKPOINT COMMAND ROUTINE
+  446/E1C3 : 7F A0 0B                   BKPCOM	CLR  BKPOP	;*
+  447/E1C6 : 8D 11                      	BSR  GETADR	;* 
+  448/E1C8 : FF A0 0C                   	STX  BKPADR	;* 
+  449/E1CB : 86 3F                      	LDAA #$3F	;* 
+  450/E1CD : B7 A0 0B                   	STAA BKPOP	;* 
+  451/E1D0 : 39                         	RTS		;* 
+  452/E1D1 :                            
+  453/E1D1 : 7E E3 A6                   OUTEEE	JMP  OUT1CH	;*
+  454/E1D4 :                            
+  455/E1D4 :                            ;* SUBR TO READ ONE OR TWO ADDRESS
+  456/E1D4 :                            ;* PARAMETERS, COMMA LEADS ADDRESSES,
+  457/E1D4 :                            ;* (CR) CANCELS COMMAND
+  458/E1D4 : 8D 03                      GET2AD	BSR  GETADR	;* GET TWO ADDRESSES XXXXXXXX
+  459/E1D6 : FF A0 02                   	STX  BEGADR	;* 
+  460/E1D9 :                            
+  461/E1D9 : 8D D1                      GETADR	BSR  INEEE	;* GET ONE ADDRESS XXXXXXXX
+  462/E1DB : C6 34                      	LDAB #$34	;* 
+  463/E1DD : 81 0D                      	CMPA #$0D	;* 
+  464/E1DF : 27 8F                      	BEQ  CONSOL	;* 
+  465/E1E1 : 81 2C                      	CMPA #',' 	;* 
+  466/E1E3 : 26 08                      	BNE  ERROR	;* 
+  467/E1E5 : BD E0 47                   	JSR  BADDR	;* 
+  468/E1E8 :                            
+  469/E1E8 :                            ;* ERROR TEST SUBROUTINE
+  470/E1E8 : F6 A0 0F                   ERTEST	LDAB ERRFLG	;*
+  471/E1EB : 27 D5                      	BEQ  RETURN	;* 
+  472/E1ED :                            
+  473/E1ED :                            ;* ERROR HANDLER, PRINTS MESSAGE
+  474/E1ED :                            ;* AND ERROR CODE
+  475/E1ED : CE E3 CA                   ERROR	LDX  #ERRMSG	;*
+  476/E1F0 : BD E0 7E                   	JSR  PDATA1	;* 
+  477/E1F3 : 17                         	TBA		;* 
+  478/E1F4 : 8D DB                      	BSR  OUTEEE	;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 10 - 05/03/2024 06:10:21 PM
+
+
+  479/E1F6 : 20 99                      	BRA  GOCON	;* 
+  480/E1F8 :                            
+  481/E1F8 :                            ;* "E" EXECUTE SINGLE TASK COMMAND
+  482/E1F8 : 8D DF                      EXCOM	BSR  GETADR	;*
+  483/E1FA : 8D B3                      	BSR  SETRUN	;* 
+  484/E1FC : FE A0 04                   	LDX  ENDADR	;* 
+  485/E1FF : 6E 00                      	JMP  0,X 	;* 
+  486/E201 :                            
+  487/E201 :                            ;* "G" GO TO USER PGM OR RETURN FROM
+  488/E201 :                            ;* BREAKPOINT COMMAND ROUTINE
+  489/E201 : BE A0 08                   GOCOM	LDS  SPTMP	;*
+  490/E204 : 8D A9                      	BSR  SETRUN	;* 
+  491/E206 : 3B                         	RTI		;* 
+  492/E207 :                            
+  493/E207 :                            ;* "P" WRITE TAPE COMMAND
+  494/E207 : 8D CB                      PUNCOM	BSR  GET2AD	;*
+  495/E209 : 7E E0 EE                   	JMP  TAPOUT	;* 
+  496/E20C :                            
+  497/E20C :                            ;* "S" COMMAND
+  498/E20C :                            ;* ACTIVATES AND INITIALIZES RT/68
+  499/E20C :                            ;* EXECUTIVE
+  500/E20C : 7F A0 0E                   SYSCOM	CLR  RELFLG	;*
+  501/E20F : 86 01                      	LDAA #1 	;* 
+  502/E211 : B7 A0 0A                   	STAA RTMOD	;* 
+  503/E214 : CE 00 09                   	LDX  #PTYTMP	;* 
+  504/E217 : 6F 00                      CLOOP	CLR  0,X  	;*
+  505/E219 : 09                         	DEX		;* 
+  506/E21A : 26 FB                      	BNE  CLOOP	;* 
+  507/E21C : A7 00                      	STAA 0,X 	;* 
+  508/E21E : 8D 8F                      	BSR  SETRUN	;* 
+  509/E220 : 7E E2 EA                   	JMP  EXEC02	;* JUMP TO RT EXEC ENTRY
+  510/E223 :                            
+  511/E223 :                            ;* "M" MEMORY EXAMINE/CHANGE ROUTINE
+  512/E223 :                            ;* AFTER BEGINNING ADDR IS ENTERED, PGM
+  513/E223 :                            ;* PRINTS ADDR AND DATA IN HEX:
+  514/E223 :                            ;*	AAAA DD
+  515/E223 :                            ;* A SLASH AND NEW HEX DATA CHANGES LOACTION,
+  516/E223 :                            ;* A (LF) OPENS NEXT ADDR, AND A (CR) CLOSES
+  517/E223 :                            ;* FUNCTION
+  518/E223 : 8D B4                      MEMCOM	BSR  GETADR	;* GET BEG ADDR XXXXXXXX
+  519/E225 :                            
+  520/E225 :                            ;* EXAMINE/CHANGE LOOP
+  521/E225 : BD E1 41                   MEM1	JSR  CRLF	;*
+  522/E228 : 86 0D                      MEM2	LDAA #$0D	;* PRINT LF XXXXXXXX
+  523/E22A : 8D A5                      	BSR  OUTEEE	;* 
+  524/E22C : CE A0 04                   	LDX  #ENDADR	;* 
+  525/E22F : BD E0 C8                   	JSR  OUT4HS	;* PRINT ADDRESS
+  526/E232 : FE A0 04                   	LDX  ENDADR	;* 
+  527/E235 : BD E0 BF                   	JSR  OUT2H	;* PRINT CONTENTS
+  528/E238 : FF A0 04                   	STX  ENDADR	;* 
+  529/E23B : BD E1 AC                   	JSR  INEEE	;* INPUT DELIMITER
+  530/E23E : 81 0A                      	CMPA #$0A	;* 
+  531/E240 : 27 E6                      	BEQ  MEM2	;* BRA IF LF TO OPEN NEXT
+  532/E242 : 81 2F                      	CMPA #'/' 	;* 
+  533/E244 : 27 01                      	BEQ  MEM3	;* BRA IF CHANGE
+  534/E246 : 39                         	RTS		;* 
+  535/E247 :                            
+  536/E247 :                            ;* CHANGE MEMORY LOCATION
+  537/E247 : BD E0 55                   MEM3	JSR  BYTE	;* READ NEW DATA XXXXXXXX
+  538/E24A : 8D 9C                      	BSR  ERTEST	;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 11 - 05/03/2024 06:10:21 PM
+
+
+  539/E24C : 09                         	DEX		;* 
+  540/E24D : A7 00                      	STAA 0,X 	;* STORE NEW DATA
+  541/E24F : A1 00                      	CMPA 0,X 	;* TEST FOR CHANGE
+  542/E251 : 27 D2                      	BEQ  MEM1	;* BRA IF OK TO OPEN NEXT
+  543/E253 : C6 35                      	LDAB #$35	;* ERROR CODE
+  544/E255 : 20 96                      	BRA  ERROR	;* 
+  545/E257 :                            
+  546/E257 :                            ;*	REAL TIME OPERATING SYSTEM COMPONENTS
+  547/E257 :                            ;*
+  548/E257 :                            ;* CONSISTS OF:
+  549/E257 :                            ;*
+  550/E257 :                            ;*	INTERRUPT PROCESSORS
+  551/E257 :                            ;*	TASK EXECUTIVE
+  552/E257 :                            ;*	AUX. SUBROUTINES
+  553/E257 :                            ;*
+  554/E257 :                            
+  555/E257 :                            
+  556/E257 :                            ;* BREAKPOINT SERVICE ROUTINE
+  557/E257 : 30                         RUNBKP	TSX		;* GET SP IN XR XXXXXXXX
+  558/E258 : 8D 1D                      	BSR  ADJSTK	;* DECR PC ON STACK
+  559/E25A : EE 05                      	LDX  5,X 	;* GET TASK PC OFF STACK
+  560/E25C : BC A0 0C                   	CPX  BKPADR	;* COMPARE TO PRESET ADR
+  561/E25F : 27 05                      	BEQ  RUNBK2	;* BRA IF SAME
+  562/E261 : C6 37                      	LDAB #$37	;* SET ERROR FLAG
+  563/E263 : F7 A0 0F                   	STAB ERRFLG	;* 
+  564/E266 : BD E1 97                   RUNBK2	JSR  SETBKP	;* REMOVE BKPT OPCODE XXXXXXXX
+  565/E269 : 86 16                      	LDAA #$16	;* 
+  566/E26B : B7 80 05                   	STAA PIACA	;* OFF RT CLOCK + ABORT INTR
+  567/E26E : BF A0 08                   	STS  SPTMP	;* SAVE TASK SP
+  568/E271 : BD E0 D0                   	JSR  PRSTAK	;* DUMP STACK
+  569/E274 : 7E E1 8F                   	JMP  TSTENT	;* ENTER CONSOLE MONITOR
+  570/E277 :                            
+  571/E277 :                            ;* SUBR TO DECREMEMT PC ON STACK
+  572/E277 : 6D 00                      ADJSTK	TST  0,X  	;*
+  573/E279 : 26 02                      	BNE  ADSTK2	;* 
+  574/E27B : 6A 05                      	DEC  5,X 	;* 
+  575/E27D : 6A 06                      ADSTK2	DEC  6,X  	;*
+  576/E27F : 39                         	RTS		;* 
+  577/E280 :                            
+  578/E280 :                            ;* SWI ENTRY POINT, DETERMINES WHETHER
+  579/E280 :                            ;* BREAKPOINT OR PGM RELEASE FUNCTION
+  580/E280 :                            
+  581/E280 : =$E280                     SINT	EQU  *  	;* SWI VECTOR DESTINATION
+  582/E280 : B6 A0 0E                   	LDAA RELFLG	;* GET PGM RELEASE FLAG
+  583/E283 : 27 D2                      	BEQ  RUNBKP	;* EXEC BKPT IF NOT SET
+  584/E285 : 7F A0 0E                   	CLR  RELFLG	;* RESET FLAG
+  585/E288 : 5F                         	CLRB		;* 
+  586/E289 : 20 56                      	BRA  EXEC09	;* GO TO EXEC TO SWAP
+  587/E28B :                            
+  588/E28B :                            ;* IRQ INTERRUPT ENTRY POINT
+  589/E28B :                            ;* INCLUDES LOGIC TO DETECT AND CORRECT
+  590/E28B :                            ;* INTERRUPT ERROR OCCURRING WHEN SWI +
+  591/E28B :                            ;* NMI OCCUR SIMULTANEOUSLY. (SEE P. A-10
+  592/E28B :                            ;* OF M6800 APPLICATIONS MANUAL)
+  593/E28B :                            
+  594/E28B : =$E28B                     IRQ	EQU  *  	;* IRQ VECTOR DESTINATION
+  595/E28B : B6 A0 0E                   	LDAA RELFLG	;* GET SWI FLAG
+  596/E28E : 26 05                      	BNE  INTBAD	;* BRA TO ERR CORR. IF SET
+  597/E290 : CE A0 00                   	LDX  #IRQTSK	;* PTR TO IRQ VECTOR/STATUS
+  598/E293 : 20 36                      	BRA  RUNINT	;* GOTO INTR SERVICE
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 12 - 05/03/2024 06:10:21 PM
+
+
+  599/E295 :                            
+  600/E295 :                            ;* CORRECT SWI-IRQ COINC. ERROR
+  601/E295 : 30                         INTBAD	TSX		;* (LABEL/NM only?)
+  602/E296 : 8D DF                      	BSR  ADJSTK	;* DECR TASK PC ON STACK
+  603/E298 :                            
+  604/E298 :                            ;* NMI INTERRUPT HANDLER
+  605/E298 :                            ;*
+  606/E298 :                            ;* TEST CONTROL PIA FOR ABORT OR CLOCK
+  607/E298 :                            ;* INTERRUPT AND PROCESS SAME
+  608/E298 :                            ;* IF NOT, EXECUTES USER INTERRUPT
+  609/E298 : =$E298                     NMI	EQU  *  	;* NMI VECTOR DEST.
+  610/E298 : B6 80 05                   	LDAA PIACA	;* GET PIA STATUS REG
+  611/E29B : F6 80 04                   	LDAB PIADA	;* CLEAR PIA INTR FLGS
+  612/E29E : 48                         	ASLA		;* 
+  613/E29F : 2B C5                      	BMI  RUNBK2	;* BRA IF ABORT INTR
+  614/E2A1 : 24 25                      	BCC  NMI5	;* BRA IF USER INTR
+  615/E2A3 :                            ;* HERE IF CLOCK INTR ONLY
+  616/E2A3 : B6 A0 0A                   	LDAA RTMOD	;* TEST SYS MOD
+  617/E2A6 : 27 20                      	BEQ  NMI5	;* BRA TO USER INTR IF NOT
+  618/E2A8 : DE 05                      	LDX  CLOCK	;* 
+  619/E2AA : 08                         	INX		;* 
+  620/E2AB : DF 05                      	STX  CLOCK	;* 
+  621/E2AD :                            ;* UPDATE TIMED TASK STATUS
+  622/E2AD : DE 03                      	LDX  TSKTMR	;* GET THE TIMED TASK COUNTER
+  623/E2AF : 27 09                      	BEQ  NMI3	;* BRA IF NOT ACTIVE
+  624/E2B1 : 09                         	DEX		;* DECR THE COUNTER
+  625/E2B2 : DF 03                      	STX  TSKTMR	;* 
+  626/E2B4 : 26 04                      	BNE  NMI3	;* BRA IF NOT EXPIRED
+  627/E2B6 : 96 0A                      	LDAA TIMTSK	;* GET TIMED TASK STAT BYTE
+  628/E2B8 : 20 1C                      	BRA  RNINT3	;* RUN AS INTERRUPT
+  629/E2BA :                            ;* UPDATE REMAINING TIME OF CURRENT TASK
+  630/E2BA : 96 02                      NMI3	LDAA TIMREM	;* GET TIME LEFT XXXXXXXX
+  631/E2BC : 27 05                      	BEQ  NMI4	;* BRA IF UNLIMITED
+  632/E2BE : 4A                         	DECA		;* 
+  633/E2BF : 97 02                      	STAA TIMREM	;* 
+  634/E2C1 : 27 1A                      	BEQ  EXEC01	;* BRA TO EXEC IF TIME UP
+  635/E2C3 : 96 07                      NMI4	LDAA INTREQ	;* TEST FOR PENDING INTR. XXXXXXXX
+  636/E2C5 : 26 16                      	BNE  EXEC01	;* 
+  637/E2C7 : 3B                         	RTI		;* 
+  638/E2C8 : CE A0 06                   NMI5	LDX  #NMITSK	;* GET NMI STAT PTR XXXXXXXX
+  639/E2CB :                            
+  640/E2CB :                            ;* GENERAL INTERRUPT PRESERVICE
+  641/E2CB :                            ;* SELECTS PROPER MODE, AND EITHER
+  642/E2CB :                            ;* RUNS OR SCHEDULES INTERRUPT SERVICE
+  643/E2CB :                            ;* TASK ACCORDING TO THE APPROPRIATE
+  644/E2CB :                            ;* STATUS BYTE
+  645/E2CB : B6 A0 0A                   RUNINT	LDAA RTMOD	;*
+  646/E2CE : 26 04                      	BNE  RNINT2	;* BRA IF MULTITASK MODE
+  647/E2D0 : EE 00                      	LDX  0,X 	;* GET VECTOR
+  648/E2D2 : 6E 00                      	JMP  0,X 	;* EXECUTE SAME AS MIKBUG
+  649/E2D4 :                            
+  650/E2D4 : A6 00                      RNINT2	LDAA 0,X	;* GET INTR STATUS BYTE XXXXXXXX
+  651/E2D6 : 8D 54                      RNINT3	BSR  TSKON	;* TURN SERV. TASK ON XXXXXXXX
+  652/E2D8 : 4D                         	TSTA		;* CHK IMMED OR DEFERRED
+  653/E2D9 : 2A 50                      	BPL  INTRET	;* BRA IF DEFERRED
+  654/E2DB : 97 07                      	STAA INTREQ	;* SET INTR REQ. FLAG
+  655/E2DD :                            ;* FALL THRU TO EXECUTIVE
+  656/E2DD :                            
+  657/E2DD :                            ;* RT/68 MULTI TASK EXECUTIVE PROGRAM
+  658/E2DD :                            ;*
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 13 - 05/03/2024 06:10:21 PM
+
+
+  659/E2DD :                            ;* SAVES CURRENT TASK STATUS IN TASK STATUS
+  660/E2DD :                            ;* TABLE, THEN SEARCHES THE TABLE FOR THE
+  661/E2DD :                            ;* HIGHEST PRIORITY RUNNABLE TASK AND STARTS
+  662/E2DD :                            ;* IT. IF THERE IS MORE THAN ONE RUNNABLE TASK
+  663/E2DD :                            ;* AT THE HIGHEST LEVEL, THE
+  664/E2DD :                            ;* EXECUTIVE WII RUN THEM ROUND ROBIN
+  665/E2DD :                            
+  666/E2DD :                            ;* TEST MODE TO PREVENT MULTIPLE
+  667/E2DD :                            ;* EXECUTION OF EXEC BY INTERRUPTS
+  668/E2DD : D6 00                      EXEC01	LDAB SYSMOD	;*
+  669/E2DF : 26 4A                      	BNE  INTRET	;* BRA IF EXEC ALREADY ACTIVE
+  670/E2E1 : 5C                         EXEC09	INCB		;* SET EXEC MODE XXXXXXXX
+  671/E2E2 : D7 00                      	STAB SYSMOD	;* 
+  672/E2E4 :                            ;* SAVE CURRENT TASK SP ON TABLE
+  673/E2E4 : 96 01                      	LDAA CURTSK	;* GET CURRENT TASK #
+  674/E2E6 : 8D 53                      	BSR  FNDTSB	;* FIND ADDR OF TSB
+  675/E2E8 : AF 01                      	STS  1,X 	;* SAVE SP
+  676/E2EA :                            
+  677/E2EA :                            ;* INITIALIZE EXEC TEMP VALUES
+  678/E2EA :                            ;* PTYTMP = HIGHEST PRIORITY FOUND
+  679/E2EA :                            ;* TSKTMP = TASK # FOR ABOVE
+  680/E2EA : 4F                         EXEC02	CLRA		;* (LABEL/NM only?)
+  681/E2EB : 97 07                      	STAA INTREQ	;* 
+  682/E2ED : 97 09                      	STAA PTYTMP	;* 
+  683/E2EF : 97 08                      	STAA TSKTMP	;* 
+  684/E2F1 : 96 01                      	LDAA CURTSK	;* 
+  685/E2F3 :                            
+  686/E2F3 :                            ;* LOOP TO SEARCH THRU TABLE FOR
+  687/E2F3 :                            ;* HIGHEST RUNNABLE TASK
+  688/E2F3 :                            ;* STARTS WITH CURRENT TASK AND COUNTS
+  689/E2F3 :                            ;* DOWN SO LAST TASK TESTED IS THE
+  690/E2F3 :                            ;* CURRENT TASK # -1. THIS ALLOWS TASKS
+  691/E2F3 :                            ;* AT THE SAME PRIORITY LEVEL TO EXECUTE
+  692/E2F3 :                            ;* ROUND-ROBIN.
+  693/E2F3 : 8D 46                      EXEC03	BSR  FNDTSB	;* FIND TSB XXXXXXXX
+  694/E2F5 : 2A 0D                      	BPL  EXEC04	;* BRA IF TASK OFF
+  695/E2F7 : C4 07                      	ANDB #$07	;* MASK PRIORITY
+  696/E2F9 : D1 09                      	CMPB PTYTMP	;* COMP. TO HIGHEST SO FAR
+  697/E2FB : 25 07                      	BCS  EXEC04	;* BRA IF LOWER
+  698/E2FD : D7 09                      	STAB PTYTMP	;* MAKE IT LATEST
+  699/E2FF : 16                         	TAB		;* CHANGE SET TASK #
+  700/E300 : CA 80                      	ORAB #$80	;* SET FOUND FLAG
+  701/E302 : D7 08                      	STAB TSKTMP	;* 
+  702/E304 :                            ;*ADVANCE TO NEXT TASK
+  703/E304 : 4A                         EXEC04	DECA		;* (LABEL/NM only?)
+  704/E305 : 84 0F                      	ANDA #$0F	;* 
+  705/E307 : 91 01                      	CMPA CURTSK	;* SEE IF LAST TASK
+  706/E309 : 26 E8                      	BNE  EXEC03	;* BRA IF NOT FINISHED
+  707/E30B :                            
+  708/E30B :                            ;* CHECK IF TASK FOUND IS RUNNABLE
+  709/E30B : D6 09                      	LDAB PTYTMP	;* GET HI PRIORITY
+  710/E30D : D1 0B                      	CMPB SYSPTY	;* COMPARE TO SYS PRIORITY
+  711/E30F : 25 D9                      	BCS  EXEC02	;* SEARCH AGAIN IF LOWER
+  712/E311 : 96 08                      	LDAA TSKTMP	;* TEST FOUND FLAG
+  713/E313 : 2A D5                      	BPL  EXEC02	;* BRA IF NOT SET
+  714/E315 :                            
+  715/E315 :                            ;* RUNNABLE TASK FOUND, SET SYSTEM
+  716/E315 :                            ;* PARAMETERS TO RUN IT
+  717/E315 : 84 0F                      	ANDA #$0F	;* 
+  718/E317 : 97 01                      	STAA CURTSK	;* SET TASK #
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 14 - 05/03/2024 06:10:21 PM
+
+
+  719/E319 : 8D 20                      	BSR  FNDTSB	;* GET TASK TSB
+  720/E31B : 54                         	LSRB		;* EXTRACT TIME LIMIT
+  721/E31C : 54                         	LSRB		;* 
+  722/E31D : 54                         	LSRB		;* 
+  723/E31E : C4 0F                      	ANDB #$0F	;* 
+  724/E320 : D7 02                      	STAB TIMREM	;* 
+  725/E322 : AE 01                      	LDS  1,X 	;* LOAD TASK SP
+  726/E324 :                            ;* TEST FOR ANY INTERRUPT THAT OCCURRED
+  727/E324 :                            ;* DURING EXEC MODE
+  728/E324 : 96 07                      	LDAA INTREQ	;* 
+  729/E326 : 26 C2                      	BNE  EXEC02	;* 
+  730/E328 : 7F 00 00                   	CLR  SYSMOD	;* SET USER MODE
+  731/E32B : 3B                         INTRET	RTI		;* RUN TASK XXXXXXXX
+  732/E32C :                            
+  733/E32C :                            ;* RT EXECUTIVE AUX. SUBROUTINES
+  734/E32C :                            ;*
+  735/E32C :                            ;* ALL ARE REENTRANT SUBROUTINES THAT
+  736/E32C :                            ;* PASS PARAMETERS AS FOLLOWS:
+  737/E32C :                            ;*
+  738/E32C :                            ;* ENTRY: TASK # IN ACC A
+  739/E32C :                            ;*
+  740/E32C :                            ;* RETURN: TASK # IN ACC A
+  741/E32C :                            ;*		TASK STATUS BYTE (NEW) IN ACC B
+  742/E32C :                            ;*		ADDR OF TSB IN XR
+  743/E32C :                            
+  744/E32C :                            ;* SUBR TO TURN TASK ON
+  745/E32C : 8D 0D                      TSKON	BSR  FNDTSB	;*
+  746/E32E : CA 80                      	ORAB #$80	;* 
+  747/E330 : E7 00                      RESTSB	STAB 0,X  	;*
+  748/E332 : 39                         	RTS		;* 
+  749/E333 :                            
+  750/E333 :                            ;* SUBR TO TURN CURRENT TASK OFF
+  751/E333 : 96 01                      CTSKOF	LDAA CURTSK	;*
+  752/E335 :                            
+  753/E335 :                            ;* SUBR TO TURN TASK OFF
+  754/E335 : 8D 04                      TSKOFF	BSR  FNDTSB	;*
+  755/E337 : C4 7F                      	ANDB #$7F	;* 
+  756/E339 : 20 F5                      	BRA  RESTSB	;* 
+  757/E33B :                            
+  758/E33B :                            ;* SUBR TO FIND TASK STATUS BYTE/WORD
+  759/E33B : 36                         FNDTSB	PSHA		;* (LABEL/NM only?)
+  760/E33C : 84 0F                      	ANDA #$0F	;* 
+  761/E33E : 16                         	TAB		;* 
+  762/E33F : 48                         	ASLA		;* 
+  763/E340 : 1B                         	ABA		;* 
+  764/E341 : 8B 50                      	ADDA #$50	;* 
+  765/E343 : 36                         	PSHA		;* 
+  766/E344 : 86 A0                      	LDAA #$A0	;* 
+  767/E346 : 36                         	PSHA		;* 
+  768/E347 : 30                         	TSX		;* 
+  769/E348 : A6 00                      	LDAA 0,X 	;* 
+  770/E34A : 31                         	INS		;* 
+  771/E34B : 31                         	INS		;* 
+  772/E34C : E6 00                      	LDAB 0,X 	;* 
+  773/E34E : 32                         	PULA		;* 
+  774/E34F : 39                         	RTS		;* 
+  775/E350 :                            
+  776/E350 :                            ;* CHARACTER AND BYTE I/O ROUTINES
+  777/E350 :                            ;*
+  778/E350 :                            ;* SELECTS INTERFACE TYPE (PIA OR ACIA)
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 15 - 05/03/2024 06:10:21 PM
+
+
+  779/E350 :                            ;* ACCORDING TO THE LEVEL OF PIA INPUT CB5
+  780/E350 :                            ;* IF ACIA TYPE IS SELECTED, THE ADDRESS
+  781/E350 :                            ;* OF THE ACIA IS OBTAINED FROM "IOVECT"
+  782/E350 :                            ;* WHICH WILL DEFAULT TO $8000
+  783/E350 :                            
+  784/E350 :                            ;* READ CHAR WITHOUT PARITY OR RUBOUT
+  785/E350 : 8D 07                      IN1CHR	BSR  INBYTE	;* GET BYTE XXXXXXXX
+  786/E352 : 84 7F                      	ANDA #$7F	;* STRIP PARITY BIT
+  787/E354 : 81 7F                      	CMPA #$7F	;* TEST FOR RUBOUT
+  788/E356 : 27 F8                      	BEQ  IN1CHR	;* AGAIN IF RUBOUT
+  789/E358 : 39                         	RTS		;* 
+  790/E359 :                            
+  791/E359 :                            ;* READ 8-BIT BYTE
+  792/E359 : 37                         INBYTE	PSHB		;* (LABEL/NM only?)
+  793/E35A : 8D 31                      	BSR  IOAUX	;* SAVE XR + SAMPLE TYPE
+  794/E35C : 26 26                      	BNE  ACIAIN	;* 
+  795/E35E :                            
+  796/E35E :                            ;* PIA SOFTWARE UART ROUTINE -
+  797/E35E :                            ;* INPUT ONE CHAR WITHOUT PARITY
+  798/E35E : A6 04                      PIAIN	LDAA 4,X  	;*
+  799/E360 : 2B FC                      	BMI  PIAIN	;* WAIT FOR START BIT
+  800/E362 : 6F 06                      	CLR  6,X 	;* SET 1/2 BIT TIME
+  801/E364 : 8D 3B                      	BSR  STRTBT	;* RESET TIMER
+  802/E366 : 8D 35                      	BSR  WAITBT	;* WAIT FOR TIMER
+  803/E368 : C6 04                      	LDAB #$04	;* 
+  804/E36A : E7 06                      	STAB 6,X 	;* SET TIMER TO FULL BIT TIME
+  805/E36C : 58                         	ASLB		;* BIT COUNT=8
+  806/E36D :                            ;* LOOP TO INPUT 8 DATA BITS
+  807/E36D : 8D 2E                      PIAIN2	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
+  808/E36F : 0D                         	SEC		;* 
+  809/E370 : 69 04                      	ROL  4,X 	;* SHIFT OUT DATA
+  810/E372 : 46                         	RORA		;* SHIFT IN A TO BUILD
+  811/E373 : 5A                         	DECB		;* DECR BIT COUNT
+  812/E374 : 26 F7                      	BNE  PIAIN2	;* BRA IF NOT DONE
+  813/E376 : 8D 25                      	BSR  WAITBT	;* WAIT FOR STOP BIT
+  814/E378 : E6 06                      CHKSTB	LDAB 6,X	;* TEST FOR # STOP BITS XXXXXXXX
+  815/E37A : 58                         	ASLB		;* 
+  816/E37B : 2A 02                      	BPL  RESTOR	;* 
+  817/E37D : 8D 1E                      	BSR  WAITBT	;* 
+  818/E37F :                            ;* RESTORE REGISTERS + RETURN
+  819/E37F : FE A0 10                   RESTOR	LDX  XTMP	;*
+  820/E382 : 33                         	PULB		;* 
+  821/E383 : 39                         	RTS		;* 
+  822/E384 :                            
+  823/E384 :                            ;* ACIA CHAR INPUT ROUTINE
+  824/E384 : E6 00                      ACIAIN	LDAB 0,X	;* GET STAT REG XXXXXXXX
+  825/E386 : 54                         	LSRB		;* MOVE RDY BIT TO SIGN POS
+  826/E387 : 24 FB                      	BCC  ACIAIN	;* WAIT IF NOT READY
+  827/E389 : A6 01                      	LDAA 1,X 	;* READ DATA
+  828/E38B : 20 F2                      	BRA  RESTOR	;* BRA TO CLEANUP
+  829/E38D :                            
+  830/E38D :                            ;* I/O SETUP SUBROUTINE
+  831/E38D : FF A0 10                   IOAUX	STX  XTMP	;* SAVE XR XXXXXXXX
+  832/E390 : CE 80 00                   	LDX  #$8000	;* LOAD XR WITH PERIPH PTR
+  833/E393 : E6 06                      	LDAB 6,X 	;* TEST FOR ACIA OR PIA
+  834/E395 : C5 20                      	BITB #$20	;* 
+  835/E397 : 27 03                      	BEQ  AUXRET	;* BRA IF PIA
+  836/E399 : FE A0 12                   	LDX  IOVECT	;* GET ACIA ADDRESS
+  837/E39C : 39                         AUXRET	RTS		;* (LABEL/NM only?)
+  838/E39D :                            
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 16 - 05/03/2024 06:10:21 PM
+
+
+  839/E39D :                            ;* SUBR TO WAIT FOR 1 BIT TIME
+  840/E39D :                            ;* AND RESET TIMER
+  841/E39D : 6D 06                      WAITBT	TST  6,X  	;*
+  842/E39F : 2A FC                      	BPL  WAITBT	;* 
+  843/E3A1 :                            
+  844/E3A1 :                            ;* SUBROUTINE TO START (RESET) BIT TIMER
+  845/E3A1 : 6C 06                      STRTBT	INC  6,X  	;*
+  846/E3A3 : 6A 06                      	DEC  6,X 	;* 
+  847/E3A5 : 39                         	RTS		;* 
+  848/E3A6 :                            ;* OUTPUT 1 CHARACTER SUBROUTINE TO
+  849/E3A6 :                            ;* PIA OR ACIA
+  850/E3A6 : 37                         OUT1CH	PSHB		;* SAVE ACC B XXXXXXXX
+  851/E3A7 : 8D E4                      	BSR  IOAUX	;* SETUP FOR ROUTINE
+  852/E3A9 : 26 15                      	BNE  ACOUT	;* USE ACIA SUBR IF TRUE
+  853/E3AB :                            
+  854/E3AB :                            ;* PIA SOFTWARE UART CHAR OUTPUT
+  855/E3AB : C6 04                      	LDAB #4 	;* 
+  856/E3AD : E7 04                      	STAB 4,X 	;* SPACE FOR START BIT
+  857/E3AF : E7 06                      	STAB 6,X 	;* SET TIMER FOR FULL
+  858/E3B1 : C6 0A                      	LDAB #10 	;* INIT. BIT COUNTER
+  859/E3B3 : 8D EC                      	BSR  STRTBT	;* RESET TIMER
+  860/E3B5 :                            ;* BIT OUTPUT LOOP
+  861/E3B5 : 8D E6                      POUT1	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
+  862/E3B7 : A7 04                      	STAA 4,X 	;* SET BIT OUTPUT
+  863/E3B9 : 0D                         	SEC		;* 
+  864/E3BA : 46                         	RORA		;* SHIFT IN NEXT BIT
+  865/E3BB : 5A                         	DECB		;* DEC BYTE COUNT
+  866/E3BC : 26 F7                      	BNE  POUT1	;* BRA IF NOT LAST BIT
+  867/E3BE : 20 B8                      	BRA  CHKSTB	;* 
+  868/E3C0 :                            
+  869/E3C0 :                            ;* ACIA CHAR OUTPUT ROUTINE
+  870/E3C0 : E6 00                      ACOUT	LDAB 0,X	;* GET STAT REG XXXXXXXX
+  871/E3C2 : 54                         	LSRB		;* SHIFT RDY BIT TO C
+  872/E3C3 : 54                         	LSRB		;* 
+  873/E3C4 : 24 FA                      	BCC  ACOUT	;* BRA IF NOT READY
+  874/E3C6 : A7 01                      	STAA 1,X 	;* STORE DATA
+  875/E3C8 : 20 B5                      	BRA  RESTOR	;* GO CLEANUP
+  876/E3CA :                            
+  877/E3CA :                            ;* ERROR MESSAGE STRING
+  878/E3CA : 20 45 52 52 20 04          ERRMSG	FCB  $20,'E','R','R',$20,4	;* 
+  879/E3D0 :                            
+  880/E3D0 :                            ;* CR/LF AND TAPE HEADER STRING
+  881/E3D0 : 0D 0A 00 00 00 04 53 31 04 CRLSTR	FCB  $0D,$0A,0,0,0,4,'S','1',4	;* 
+  882/E3D9 :                            
+  883/E3D9 :                            ;*
+  884/E3D9 :                            ;* COMMAND CODE/ADDRESS TABLE
+  885/E3D9 :                            ;*
+  886/E3D9 : =$E3D9                     CMDTBL	EQU  *  	;* 
+  887/E3D9 : 42                         	FCB  'B' 	;* 
+  888/E3DA : E1 C3                      	FDB  BKPCOM	;* 
+  889/E3DC : 44                         	FCB  'D' 	;* 
+  890/E3DD : E1 A7                      	FDB  DMPCOM	;* 
+  891/E3DF : 45                         	FCB  'E' 	;* 
+  892/E3E0 : E1 F8                      	FDB  EXCOM	;* 
+  893/E3E2 : 47                         	FCB  'G' 	;* 
+  894/E3E3 : E2 01                      	FDB  GOCOM	;* 
+  895/E3E5 : 4C                         	FCB  'L' 	;* 
+  896/E3E6 : E0 00                      	FDB  LOAD	;* 
+  897/E3E8 : 4D                         	FCB  'M' 	;* 
+  898/E3E9 : E2 23                      	FDB  MEMCOM	;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 17 - 05/03/2024 06:10:21 PM
+
+
+  899/E3EB : 50                         	FCB  'P' 	;* 
+  900/E3EC : E2 07                      	FDB  PUNCOM	;* 
+  901/E3EE : 52                         	FCB  'R' 	;* 
+  902/E3EF : E0 D0                      	FDB  PRSTAK	;* 
+  903/E3F1 : 53                         	FCB  'S' 	;* 
+  904/E3F2 : E2 0C                      	FDB  SYSCOM	;* 
+  905/E3F4 : 1B                         	FCB  $1B 	;* (ESC) NEXT ROM OR USER DEFINE
+  906/E3F5 : 70 00                      	FDB  $7000	;* 
+  907/E3F7 : 00                         	FCB  0 	;* END
+  908/E3F8 :                            
+  909/E3F8 :                            ;*
+  910/E3F8 :                            ;* INTERRUPT VECTORS
+  911/E3F8 :                            ;*
+  912/E3F8 : E2 8B                      	FDB  IRQ 	;* * FFF8 IRQ VECTOR
+  913/E3FA : E2 80                      	FDB  SINT	;* * FFFA SWI VECTOR
+  914/E3FC : E2 98                      	FDB  NMI 	;* * FFFC NMI VECTOR
+  915/E3FE : E1 47                      	FDB  INIT	;* * FFFE RESTART VECTOR
+  916/E400 :                            
+  917/E400 : =$E400                     zEND    EQU  *
+  918/E400 :                            	END		;* 
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 18 - 05/03/2024 06:10:21 PM
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+*ACIACS :                      8008 C | *ACIADB :                      8009 C |
+ ACIAIN :                      E384 C |  ACOUT :                       E3C0 C |
+ ADJSTK :                      E277 C |  ADSTK2 :                      E27D C |
+*ARCHITECTURE :                                      "x86_64-unknown-linux" - |
+*ASL_INC :                        1 - |  AUXRET :                      E39C C |
+ BADDR :                       E047 C |  BEGADR :                      A002 C |
+*BELL :                           7 - |  BKPADR :                      A00C C |
+ BKPCOM :                      E1C3 C |  BKPOP :                       A00B C |
+*BOUT :                        E0CE C |  BYTE :                        E055 C |
+*CASESENSITIVE :                  0 - |  CHKSTB :                      E378 C |
+ CLOCK :                          5 C |  CLOOP :                       E217 C |
+ CMDERR :                      E193 C |  CMDTBL :                      E3D9 - |
+ CMSRCH :                      E181 C |  CONENT :                      E16A C |
+ CONSOL :                      E170 C | *CONSTPI :        3.141592653589793 - |
+*CONTRL :                      E0E3 C | *CR :                             D - |
+ CRLF :                        E141 C |  CRLSTR :                      E3D0 C |
+*CTRL_A :                         1 - | *CTRL_C :                         3 - |
+*CTRL_D :                         4 - | *CTRL_Q :                        11 - |
+*CTRL_S :                        13 - | *CTRL_U :                        15 - |
+*CTSKOF :                      E333 C |  CURTSK :                         1 C |
+*DATE :                "05/03/2024" - |  DMPCOM :                      E1A7 C |
+ DUMP :                        E085 C |  DUMP1 :                       E092 C |
+ DUMP2 :                       E09B C |  ENDADR :                      A004 C |
+ ERRFLG :                      A00F C |  ERRMSG :                      E3CA C |
+ ERROR :                       E1ED C |  ERTEST :                      E1E8 C |
+ EXCOM :                       E1F8 C |  EXEC01 :                      E2DD C |
+ EXEC02 :                      E2EA C |  EXEC03 :                      E2F3 C |
+ EXEC04 :                      E304 C |  EXEC09 :                      E2E1 C |
+*FALSE :                          0 - |  FNDTSB :                      E33B C |
+ GET2AD :                      E1D4 C |  GETADR :                      E1D9 C |
+ GOCOM :                       E201 C |  GOCON :                       E191 C |
+*GTRL_G :                         7 - | *HAS64 :                          1 - |
+ HBAD :                        E0A4 C |  IHRET :                       E0BC C |
+ IN1CHR :                      E350 C |  INBYTE :                      E359 C |
+ INCH :                        E078 C |  INEEE :                       E1AC C |
+ INHEX :                       E0AA C |  INIT :                        E147 C |
+ INTBAD :                      E295 C |  INTREQ :                         7 C |
+ INTRET :                      E32B C |  IOAUX :                       E38D C |
+ IOVECT :                      A012 C |  IRQ :                         E28B - |
+ IRQTSK :                      A000 C |  JOUT1C :                      E109 C |
+ JPDATA :                      E144 C |  LDMERR :                      E040 C |
+*LF :                             A - | *LISTON :                         1 - |
+ LOAD :                        E000 C |  LOAD2 :                       E006 C |
+ LOAD3 :                       E012 C |  LOAD4 :                       E01B C |
+*LOAD5 :                       E024 C |  LOAD6 :                       E029 C |
+ LOAD7 :                       E039 C |  LODERR :                      E042 C |
+*MACEXP :                         7 - |  MEM1 :                        E225 C |
+ MEM2 :                        E228 C |  MEM3 :                        E247 C |
+ MEMCOM :                      E223 C | *MOMCPU :                      6800 - |
+*MOMCPUNAME :                "6800" - | *NESTMAX :                      100 - |
+ NMI :                         E298 - |  NMI3 :                        E2BA C |
+ NMI4 :                        E2C3 C |  NMI5 :                        E2C8 C |
+ NMITSK :                      A006 C | *NULL :                           0 - |
+ OUT1CH :                      E3A6 C |  OUT2H :                       E0BF C |
+ OUT2HS :                      E0CA C |  OUT4HS :                      E0C8 C |
+ OUTCH :                       E075 C |  OUTEEE :                      E1D1 C |
+ OUTHL :                       E067 C |  OUTHR :                       E06B C |
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 19 - 05/03/2024 06:10:21 PM
+
+
+ OUTLDR :                      E0F4 C | *OUTS :                        E0CC C |
+*PADDING :                        0 - |  PDATA1 :                      E07E C |
+ PDATA2 :                      E07B C |  PIACA :                       8005 C |
+ PIACB :                       8007 C |  PIADA :                       8004 C |
+*PIADB :                       8006 C |  PIAIN :                       E35E C |
+ PIAIN2 :                      E36D C |  POUT1 :                       E3B5 C |
+ PRSTAK :                      E0D0 C | *PRSTK :                       E0DA C |
+ PRSTK2 :                      E0E6 C |  PTYTMP :                         9 C |
+ PUNCOM :                      E207 C |  RDRCON :                      E016 C |
+*RELAXED :                        0 - |  RELFLG :                      A00E C |
+ RESTOR :                      E37F C |  RESTSB :                      E330 C |
+ RETURN :                      E1C2 C |  RNINT2 :                      E2D4 C |
+ RNINT3 :                      E2D6 C |  RTMOD :                       A00A C |
+ RUNBK2 :                      E266 C |  RUNBKP :                      E257 C |
+ RUNINT :                      E2CB C |  SBRET :                       E1A6 C |
+ SETBKP :                      E197 C |  SETRN2 :                      E1BC C |
+ SETRUN :                      E1AF C |  SINT :                        E280 - |
+*SPC :                           20 - |  SPTMP :                       A008 C |
+ STACK :                       A042 - |  STRTBT :                      E3A1 C |
+ SYSCOM :                      E20C C |  SYSMOD :                         0 C |
+ SYSPTY :                         B C |  TAPAUX :                      E0EA C |
+ TAPOUT :                      E0EE C | *TIME :               "06:10:21 PM" - |
+ TIMREM :                         2 C |  TIMTSK :                         A C |
+ TOUT1 :                       E0FA C |  TOUT2 :                       E10C C |
+ TOUT3 :                       E112 C |  TOUT4 :                       E114 C |
+ TOUT5 :                       E12E C | *TRUE :                           1 - |
+*TSKOFF :                      E335 C |  TSKON :                       E32C C |
+*TSKTBL :                      A050 C |  TSKTMP :                         8 C |
+ TSKTMR :                         3 C |  TSTENT :                      E18F C |
+*VERSION :                     142F - |  WAITBT :                      E39D C |
+ XTMP :                        A010 C | *ZEND :                        E400 - |
+*ZSTART :                      E000 - |
+
+    176 symbols
+     42 unused symbols
+
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 20 - 05/03/2024 06:10:21 PM
+
+
+  Defined Macros:
+  ---------------
+
+LIST                                  | NAM                                  
+NOLIST                                | NOOPT                                
+OPT                                   | PAGE                                 
+PSHD                                  | PULD                                 
+SPC                                   | TTL                                  
+
+     10 macros
+
+ AS V1.42 Beta [Bld 264] - Source File rt68mx.s - Page 21 - 05/03/2024 06:10:21 PM
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.01 seconds assembly time
+
+   1002 lines source file
+      2 passes
+      0 errors
+      0 warnings
