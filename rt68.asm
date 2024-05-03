@@ -86,28 +86,28 @@ STACK	EQU  *  	;* MONITOR STACK
 	ORG  RAM+$50	;* 
 TSKTBL	RMB  48  	;* 
 
-;* DEFINE PERIPHERIAL REGISTERS
-;	ORG  $8004	;* 
-	ORG  IO		;* 
-   ifndef    NEW
-PIADA	RMB  1		;* 
-PIACA	RMB  1  	;* 
-PIADB	RMB  1  	;* 
-PIACB	RMB  1  	;* 
-ACIACS	RMB  1  	;* 
-ACIADB	RMB  1  	;* 
-   else
-;* $8000
-ACIACS	RMB  1  	;* Primary 6850 
-ACIADB	RMB  1  	;* 
-ACIACSB	RMB  1          ;* Secondary 6850 (not used)
-ACIADBB RMB  1          ;*
-;* $8004
-PIADA	RMB  1		;* Primary 6821
-PIACA	RMB  1  	;* 
-PIADB	RMB  1  	;* 
-PIACB	RMB  1  	;* 
-    endif
+;; ;* DEFINE PERIPHERIAL REGISTERS
+;; ;	ORG  $8004	;* 
+;; 	ORG  IO		;* 
+;;    ifndef    NEW
+;; PIADA	RMB  1		;* 
+;; PIACA	RMB  1  	;* 
+;; PIADB	RMB  1  	;* 
+;; PIACB	RMB  1  	;* 
+;; ACIACS	RMB  1  	;* 
+;; ACIADB	RMB  1  	;* 
+;;    else
+;; ;* $8000
+;; ACIACS	RMB  1  	;* Primary 6850 
+;; ACIADB	RMB  1  	;* 
+;; ACIACSB	RMB  1          ;* Secondary 6850 (not used)
+;; ACIADBB RMB  1          ;*
+;; ;* $8004
+;; PIADA	RMB  1		;* Primary 6821
+;; PIACA	RMB  1  	;* 
+;; PIADB	RMB  1  	;* 
+;; PIACB	RMB  1  	;* 
+;;     endif
 
 ;	ORG  $E000	;* 
 	ORG  ROM	;*
@@ -418,6 +418,9 @@ INIT	LDS  #STACK	;* INITIALIZE PERIPHERALS XXXXXXXX
         nop
         ldaa    #_8N1x16        ;* 8N1 NON-INTERRUPT x16
         staa    0,X
+;*
+        ldx     #HELLOST
+        jsr     PDATA1
     endif
 CONENT	CLR  BKPOP	;* CONSOLE ROUTINE ENTRY POINT XXXXXXXX
 	CLR  RTMOD	;* 
@@ -871,10 +874,10 @@ ACIAIN	LDAB 0,X	;* GET STAT REG XXXXXXXX
 
 ;* I/O SETUP SUBROUTINE
 IOAUX	STX  XTMP	;* SAVE XR XXXXXXXX
-	;LDX  #ACIACS	;* LOAD XR WITH PERIPH PTR ($8000)
-	;LDAB 6,X 	;* TEST FOR ACIA OR PIA
-	;BITB #$20	;* 
-	;BEQ  AUXRET	;* BRA IF PIA
+	LDX  #ACIACS	;* LOAD XR WITH PERIPH PTR ($8000)
+	LDAB 6,X 	;* TEST FOR ACIA OR PIA
+	BITB #$20	;* 
+	BEQ  AUXRET	;* BRA IF PIA
 	LDX  IOVECT	;* GET ACIA ADDRESS
 AUXRET	RTS		;* (LABEL/NM only?)
 
@@ -923,7 +926,7 @@ ERRMSG	FCB  ' Err \4'	;*
 ;* CR/LF AND TAPE HEADER STRING
 ;CRLSTR	FCB  $0D,$0A,0,0,0,4,'S','1',4	;* 
 CRLSTR	FCB  '\n\r\4'
-        FCB     'S1\4'	;* 
+        FCB  'S1\4'	;* 
 
 ;*
 ;* COMMAND CODE/ADDRESS TABLE
@@ -951,6 +954,14 @@ CMDTBL	EQU  *  	;*
 	FDB  $7000	;* 
 	FCB  0 	;* END
 
+;* -----------------------------------------------------------------------------
+;*
+;* -----------------------------------------------------------------------------
+HELLOST fcb     '\12\r\nRT68MX 0.1.2'  ;* 12 = ^L (CLS) based on 1.1
+        fcb     CTRL_D                 ;*
+;*
+ENDTBL  EQU     *
+;* -----------------------------------------------------------------------------
 ;* EPROM Fill
         ;; Fill up to FFD0 with FF
         dc.b [(*+($FFF8-*))&$FFF8-*]$ff
