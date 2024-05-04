@@ -281,6 +281,18 @@ The circuits on the following pages give example configurations for several opti
 
 Two circuits are shown that can provide a stable, precise clock signal for the RT/68 multitask executive, This is also an optional feature. Both circuits cost less than a dollar or so to construct and are extremely simple, but provide an accurate reference signal. This clock signal should be in the range if 10 to 100 Hz for optimum operation.
 
+## Modification for use with the 68Retro MP02A clone
+
+| Addr | Description |
+|--|--|
+| 0000 | RT68MX Real Time OS variables |
+| A000 | RT68MX Monitor and stack |
+| E000 | Start of ROM code |
+| F000 | ACIA ($F000-02) and PIA ($F004-08) |
+| FFF8 | Interupt vectors for RT68MX ROM |
+
+I'm experimenting with the RT68MX code but keeping the entry points so existing code (RT/EDIT & A/BASIC) works.
+
 ## Notes
 
 I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which should allow us to avoid the cutting and bodging of the address lines.
