@@ -295,6 +295,8 @@ The MP02 clone isn't built like the MEK6800 so there is no adding the RT68MX ROM
 
 I'm experimenting with the RT68MX code but keeping the entry points so existing code (RT/EDIT & A/BASIC) works. I don't have a tape interface, so that's next.
 
+| Date | Description |
+|--|--|
 | 20240503 | Well I'll be ... it works. I was able to load the existing original rtedit-10c.s19, commands work, I added a few lines of BASIC, LIST, SAVE (to the console) and return to RT68MX. |
 
 ## Notes
