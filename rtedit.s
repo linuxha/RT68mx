@@ -21,18 +21,18 @@ SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL           000B
 
 	ORG  $A000	;* 
 ;	ORG  RAM	;* 
-IRQTSK	RMB  2  	;* IRQ TASK/VECTOR
-BEGADR	RMB  2  	;* 
-ENDADR	RMB  2  	;* 
-NMITSK	RMB  2  	;* NMI TASK/VECTOR
-SPTMP	RMB  2  	;* SP TMP VAL
-RTMOD	RMB  1  	;* RT MODE FLAG
-BKPOP	RMB  1  	;* BKPT OPCODE/FLAG
-BKPADR	RMB  2  	;* BKPT ADDRESS
-RELFLG	RMB  1  	;* SWI FLAG
-ERRFLG	RMB  1  	;* ERROR FLAG/CODE
-XTMP	RMB  2  	;* 
-IOVECT	RMB  2  	;* ACIA ADDRESS VECTOR
+IRQTSK	RMB  2  	;* A000 -IRQ TASK/VECTOR
+BEGADR	RMB  2  	;* A002
+ENDADR	RMB  2  	;* A004
+NMITSK	RMB  2  	;* A006 - NMI TASK/VECTOR
+SPTMP	RMB  2  	;* A008 - SP TMP VAL
+RTMOD	RMB  1  	;* A009 - RT MODE FLAG
+BKPOP	RMB  1  	;* A00A - BKPT OPCODE/FLAG
+BKPADR	RMB  2  	;* A00C - BKPT ADDRESS
+RELFLG	RMB  1  	;* A00D - SWI FLAG
+ERRFLG	RMB  1  	;* A00E - ERROR FLAG/CODE
+XTMP	RMB  2  	;* A00F
+IOVECT	RMB  2  	;* A010 - ACIA ADDRESS VECTOR
 
 	ORG  $A042	;* 
 STACK	EQU  *  	;* MONITOR STACK
@@ -84,7 +84,7 @@ M0026   RMB     1               ;* EQU     $0026
 M0027   RMB     1               ;* EQU     $0027 Hi
 M0028   RMB     1               ;* EQU     $0028 Lo
 ;
-M0029   RMB     1               ;* EQU     $0029
+MSAVEX   RMB     1               ;* EQU     $0029
 M002A   RMB     1               ;* EQU     $002A
 M002B   RMB     1               ;* EQU     $002B
 M002C   RMB     1               ;* EQU     $002C
@@ -146,8 +146,8 @@ PRSTR   EQU     $E07E           ;* PDATA ?
 PRSPC   EQU     $E0CC           ;* Print SPC
 PCRLF   EQU     $E141           ;* Print CRLF
 CONSLE  EQU     $E16A           ;* Console (return to console?)
-IN1CHR  EQU     $E350           ;* INEEE ?
-OUT1CH  EQU     $E3A6           ;* OUTEEE ?
+IN1CHR  EQU     $E350           ;* INEEE ? Yes
+OUT1CH  EQU     $E3A6           ;* OUTEEE ? Yes
 
 ;****************************************************
 ;* Program Code / Data Areas                        *
@@ -2061,9 +2061,9 @@ Z0E61   DEC     ,X                       ;0E61: 6A 00          'j.'
 ; ------------------------------------------------------------------------------
 
 Z0E68   LDX     M0027                    ;0E68: DE 27          '.''
-        STX     M0029                    ;0E6A: DF 29          '.)'
+        STX     MSAVEX                    ;0E6A: DF 29          '.)'
         TSX                              ;0E6C: 30             '0'
-        LDAA    M0029                    ;0E6D: 96 29          '.)'
+        LDAA    MSAVEX                    ;0E6D: 96 29          '.)'
         STAA    $02,X                    ;0E6F: A7 02          '..'
         LDAA    M002A                    ;0E71: 96 2A          '.*'
         STAA    $03,X                    ;0E73: A7 03          '..'
@@ -2104,12 +2104,12 @@ Z0E99   LDAB    #$80                     ;0E99: C6 80          '..'
 ; ------------------------------------------------------------------------------
 
 Z0EA0   LDAB    #$20                     ;0EA0: C6 20          '. '
-Z0EA2   STX     M0029                    ;0EA2: DF 29          '.)'
+Z0EA2   STX     MSAVEX                    ;0EA2: DF 29          '.)'
         LDX     M0027                    ;0EA4: DE 27          '.''
         LDAA    ,X                       ;0EA6: A6 00          '..'
         INX                              ;0EA8: 08             '.'
         STX     M0027                    ;0EA9: DF 27          '.''
-        LDX     M0029                    ;0EAB: DE 29          '.)'
+        LDX     MSAVEX                    ;0EAB: DE 29          '.)'
         STAA    ,X                       ;0EAD: A7 00          '..'
         BEQ     Z0EB5                    ;0EAF: 27 04          ''.'
         INX                              ;0EB1: 08             '.'
@@ -2165,7 +2165,7 @@ Z0EF7   TSX                              ;0EF7: 30             '0'
         INS                              ;0EFC: 31             '1'
         INS                              ;0EFD: 31             '1'
 ; ------------------------------------------------------------------------------
-; JMP ,X or 'n' ???
+; JMP ,X
         JMP     ,X                       ;0EFE: 6E 00          'n.'
 ; ------------------------------------------------------------------------------
 
@@ -2175,25 +2175,28 @@ Z0EF7   TSX                              ;0EF7: 30             '0'
 ;
 Z0F00   LDAB    #$80                     ;0F00: C6 80          '..'
         BRA     Z0F0B                    ;0F02: 20 07          ' .'
+
 Z0F04   TSX                              ;0F04: 30             '0'
         LDX     $02,X                    ;0F05: EE 02          '..'
         BRA     Z0EF3                    ;0F07: 20 EA          ' .'
+
 Z0F09   LDAB    #$20                     ;0F09: C6 20          '. '
-Z0F0B   LDAA    ,X                       ;0F0B: A6 00          '..'
-        BSR     Z0F17                    ;0F0D: 8D 08          '..'
+Z0F0B   LDAA    ,X                       ;0F0B: A6 00          '..' ;* Get the character
+        BSR     Z0F17                    ;0F0D: 8D 08          '..' 
         TSTA                             ;0F0F: 4D             'M'
         BEQ     Z0F24                    ;0F10: 27 12          ''.'
         INX                              ;0F12: 08             '.'
         DECB                             ;0F13: 5A             'Z'
         BNE     Z0F0B                    ;0F14: 26 F5          '&.'
 Z0F16   TBA                              ;0F16: 17             '.'
-Z0F17   STX     M0029                    ;0F17: DF 29          '.)'
+;*
+Z0F17   STX     MSAVEX                    ;0F17: DF 29          '.)'
         LDX     M0027                    ;0F19: DE 27          '.''
         STAA    ,X                       ;0F1B: A7 00          '..'
         BEQ     Z0F20                    ;0F1D: 27 01          ''.'
 Z0F1F   INX                              ;0F1F: 08             '.'
 Z0F20   STX     M0027                    ;0F20: DF 27          '.''
-        LDX     M0029                    ;0F22: DE 29          '.)'
+        LDX     MSAVEX                    ;0F22: DE 29          '.)'
 Z0F24   RTS                              ;0F24: 39             '9'
 ; ------------------------------------------------------------------------------
 
@@ -2222,13 +2225,13 @@ Z0F41   STAB    M002B                    ;0F41: D7 2B          '.+'
 ; ------------------------------------------------------------------------------
 
 Z0F4C   LDX     M0027                    ;0F4C: DE 27          '.''
-        STX     M0029                    ;0F4E: DF 29          '.)'
+        STX     MSAVEX                    ;0F4E: DF 29          '.)'
         LDX     M0020                    ;0F50: DE 20          '. '
 Z0F52   STX     M002D                    ;0F52: DF 2D          '.-'
-        LDX     M0029                    ;0F54: DE 29          '.)'
+        LDX     MSAVEX                    ;0F54: DE 29          '.)'
         LDAA    ,X                       ;0F56: A6 00          '..'
         INX                              ;0F58: 08             '.'
-        STX     M0029                    ;0F59: DF 29          '.)'
+        STX     MSAVEX                    ;0F59: DF 29          '.)'
         LDX     M002D                    ;0F5B: DE 2D          '.-'
         CMPA    ,X                       ;0F5D: A1 00          '..'
         BNE     Z0F69                    ;0F5F: 26 08          '&.'
@@ -2282,9 +2285,9 @@ Z0F8D   LDX     M0027                    ;0F8D: DE 27          '.''
         STX     M0027                    ;0FA1: DF 27          '.''
         CLR     ,X                       ;0FA3: 6F 00          'o.'
         BRA     Z0FB1                    ;0FA5: 20 0A          ' .'
-Z0FA7   STX     M0029                    ;0FA7: DF 29          '.)'
+Z0FA7   STX     MSAVEX                    ;0FA7: DF 29          '.)'
         BSR     Z0FBC                    ;0FA9: 8D 11          '..'
-        LDX     M0029                    ;0FAB: DE 29          '.)'
+        LDX     MSAVEX                    ;0FAB: DE 29          '.)'
         STX     M0022                    ;0FAD: DF 22          '."'
         BSR     Z0FC8                    ;0FAF: 8D 17          '..'
 Z0FB1   PSHA                             ;0FB1: 36             '6'
