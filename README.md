@@ -299,6 +299,11 @@ I'm experimenting with the RT68MX code but keeping the entry points so existing 
 |--|--|
 | 20240503 | Well I'll be ... it works. I was able to load the existing original rtedit-10c.s19, commands work, I added a few lines of BASIC, LIST, SAVE (to the console) and return to RT68MX. |
 
+  asl -cpu 6800 -D ROMORIG -L rt68-mp02.asm
+  p2hex +5 -F Moto -r \$-\$ rt68-mp02.p rt68mx-t.s19
+  srec_cat rt68mx-t.s19 -o rt68mx-mp02.s19
+  #memsim2 rt68mx-mp02.s19 # Memory EPROM simulator hardware
+
 ## Notes
 
 I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which should allow us to avoid the cutting and bodging of the address lines.
