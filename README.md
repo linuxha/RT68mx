@@ -16,6 +16,10 @@ RT68mx can handle 8 processes.
 
 I grew up working with systems such as SWTPC and operating systems such as TSC FLEX, Microware's OS-9 and RT/68MX. It was a fun and interesting time. While today we have much more resource and better tools the past wasn't all that bad. Things were a lot more manual but the learning experience was what helped us to build what we have today.
 
+RT/68MX, RT/Edit and A/BASIC are software packages from Microware Systems Corporation, Copyright 1977. This package is an interesting environment in that it's designed to run on the embedded board and with a cheap cassette recorder. Since we're in computers, it's called a cassette drive. No matter what it's called it was a common and inexpensive, from $40-$100. Compared to a floppy drive which cost many times more, you just needed to learn to deal with the cassettes. But you have a development environment that reduced the cost significantly.
+
+These pages and files will attempt to put all the files and documents together so as to demonstrate what this development env was like. It is a much different development environment thatn we have today. But it was exciting to be pioneers. And it is an understatement to say that it's amazing to look back and see what we accomplished.
+
 # RT68/MX
 
 This version of RT68mx source code has been modified to specifically assemble properly with the asl macro assembler ([links below](#Source)). I've also taken the liberty to clean up and reformat the source. Sorry I understand why it was done but I've always hated the way the source code looked.
@@ -304,6 +308,10 @@ I'm experimenting with the RT68MX code but keeping the entry points so existing 
     srec_cat rt68mx-t.s19 -o rt68mx-mp02.s19            # cleanup s19
     #memsim2 rt68mx-mp02.s19                            # Memory EPROM simulator hardware
 
+## Nods for Motorola MEK6800D2
+
+I don't have a full understanding of the mods need for RT68MX, RT/Edit and A/BASIC to work with the cassette yet. But I do have the S19 files modifications to support the Motorola MEK6800D2. Both abasic-d2.s19 and rtedit-d2.s19 have those modifications.
+
 ## Notes
 
 I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which should allow us to avoid the cutting and bodging of the address lines.
@@ -313,6 +321,7 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 | File | Description |
 | -- | -- |
 | abasic-10c.s19 | |
+| abasic-d2.s19 | Modified S19 code to support MEK6800D2 and dual cassettes |
 | abasic.asm | A/BASIC Disassembly (WIP)|
 | ABASIC-FLEX | Dir |
 | abasic.info | f9dasm info file |
@@ -327,6 +336,7 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 | docs/RT68MX-Manual.pdf | RT68MX Manual |
 | rtbasic-10c.s19 | |
 | rtedit-10c.s19 | |
+| rtedit-d2.s19 | Modified S19 code to support MEK6800D2 and dual cassettes |
 | rtedit.asm | RTEdit disaeembly |
 | rtedit.info | f9dasm info file |
 | rtedit.s | |
