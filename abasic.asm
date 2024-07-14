@@ -11,9 +11,26 @@
 ; 12K 2A22 - 2FFE
 ; 16K 3692 - 3FFE
 ;
-Z0000   EQU     $0000
+Z0000   equ     $0000     ;* Junk from mid table
+Z012D   equ     $012D     ;* Junk from mid table (M0ED5)
+Z10FC   equ     $10FC     ;* Junk from mid table ???
+Z13B1   equ     $13B1     ;* Junk from mid table ??? Z12A8 Table
+
 ;* OS Variables
 M000A   EQU     $000A           ;* TIMTSK - Times task intr status (RT68 OS)
+SYSMOD	equ     $0000           ;* RT MODE 0=USER 1=EXEC  ($0000)
+CURTSK	equ     $0001           ;* TASK CURRENTLY ACTIVE  ($0001)
+TIMREM	equ     $0002           ;* TASK TIME REMAINING    ($0002)
+TSKTMR	equ     $0003           ;* TIMED TASK COUNTER     ($0003)
+CLOCK	equ     $0005           ;* RT CLOCK COUNTER       ($0005)
+INTREQ	equ     $0007           ;* INTERRUPT REQUEST FLAG ($0007)
+TSKTMP	equ     $0008           ;* RT EXEC TEMP VAL       ($0008)
+PTYTMP	equ     $0009           ;* RT EXEC TEMP VAL       ($0009)
+TIMTSK	equ     $000A           ;* TIMED TASK INTR STATUS ($000A)
+SYSPTY	equ     $000B           ;* SYS PRIORITY LEVEL     ($000B)
+
+IOVECT  equ     $A012           ;* ACIA address vector
+
 M0014   EQU     $0014           ;* ?
 M0015   EQU     $0015           ;* ?
 ;* Compiler working storage
@@ -55,8 +72,8 @@ BASPTR  EQU     $0049           ; Points to the Langauage statements ???
 M0049   EQU     $0049
 ;
 M004B   EQU     $004B
-M004D   EQU     $004D
-M004E   EQU     $004E
+M004D   EQU     $004D           ;* SaveA
+M004E   EQU     $004E           ;* SaveB
 M004F   EQU     $004F
 M0050   EQU     $0050
 M0051   EQU     $0051
@@ -77,36 +94,36 @@ M0065   EQU     $0065
 M0067   EQU     $0067
 M0069   EQU     $0069
 M006A   EQU     $006A
-M006B   EQU     $006B
-M006C   EQU     $006C
-M006D   EQU     $006D
-M006E   EQU     $006E
-M006F   EQU     $006F
-M0070   EQU     $0070
-M0072   EQU     $0072
-M0073   EQU     $0073
-M0074   EQU     $0074
-M0075   EQU     $0075
-M0076   EQU     $0076
-M0077   EQU     $0077
-M0078   EQU     $0078
-M0079   EQU     $0079
-M007A   EQU     $007A
-M007B   EQU     $007B
-M007C   EQU     $007C
-M007D   EQU     $007D
-M007E   EQU     $007E
-M007F   EQU     $007F
-M0080   EQU     $0080
-M0081   EQU     $0081
-M0082   EQU     $0082
-M0083   EQU     $0083
-M0084   EQU     $0084
-M0085   EQU     $0085
-M0086   EQU     $0086
-M0087   EQU     $0087
-M0088   EQU     $0088
-M0089   EQU     $0089
+M006B   EQU     $006B           ;* start zero'ng here
+M006C   EQU     $006C           ;
+M006D   EQU     $006D           ;
+M006E   EQU     $006E           ;
+M006F   EQU     $006F           ;
+M0070   EQU     $0070           ;
+M0072   EQU     $0072           ;
+M0073   EQU     $0073           ;
+M0074   EQU     $0074           ;
+M0075   EQU     $0075           ;
+M0076   EQU     $0076           ;
+M0077   EQU     $0077           ;
+M0078   EQU     $0078           ;
+M0079   EQU     $0079           ;
+M007A   EQU     $007A           ;
+M007B   EQU     $007B           ;
+M007C   EQU     $007C           ;
+M007D   EQU     $007D           ;
+M007E   EQU     $007E           ;
+M007F   EQU     $007F           ;
+M0080   EQU     $0080           ;
+M0081   EQU     $0081           ;
+M0082   EQU     $0082           ;
+M0083   EQU     $0083           ;
+M0084   EQU     $0084           ;
+M0085   EQU     $0085           ;
+M0086   EQU     $0086           ;
+M0087   EQU     $0087           ;
+M0088   EQU     $0088           ;
+M0089   EQU     $0089           ;* Ends zero'ng here
 M008A   EQU     $008A
 M008B   EQU     $008B
 M008E   EQU     $008E
@@ -119,6 +136,18 @@ M00D6   EQU     $00D6
 M00DC   EQU     $00DC
 M00EA   EQU     $00EA
 M00F3   EQU     $00F3
+
+;* Not sure why this was missing and
+;* also why it's mid code ???
+;* LANGTBL $0477 - $0571
+;* also why mid LANGTBL ???
+M04EF   equ     $04EF
+M0500   equ     $0500           ;* Not sure why this was missing THEN, $0
+M0528   equ     $0528           ;* Not sure why this was missing
+M0529   equ     $0529           ;* Not sure why this was missing
+M0550   equ     $0550           ;* Not sure why this was missing
+M0551   equ     $0551           ;* Not sure why this was missing
+M0571   equ     $0571           ;* Not sure why this was missing LANGTBL END
 
 Z1BC1   EQU     $1BC1
 
@@ -135,19 +164,32 @@ M1D42   EQU     $1D42           ;* Line reference table
 M1ED2   EQU     $1ED2           ;* Symbol Table
 M1FFE   EQU     $1FFE           ;* Additional memory
 
-M5354   EQU     $5354
+M5354   EQU     $5354           ;* ST
 
-PIA1    EQU     $8007
+PIACB
+PIA1    EQU     $8007           ;* $8004-$8007 PIA
 M8007   EQU     $8007
 
+;*
+;* RT68MX/MIKBUG routines? yes
+;*
+PDATA1  EQU     $E07E           ;* PDATA1
 ZE07E   EQU     $E07E           ;* PDATA1
+OUT4HS  EQU     $E0C8           ;* OUT4HS
 ZE0C8   EQU     $E0C8           ;* OUT4HS
+OUT2HS  EQU     $E0CA           ;* OUT2HS
 ZE0CA   EQU     $E0CA           ;* OUT2HS
+OUTS    EQU     $E0CC           ;* OUTS
 ZE0CC   EQU     $E0CC           ;* OUTS
+TAPAUX  EQU     $E0EA           ;* TAPAUX Pg 56 RT68MX Manual
 ZE0EA   EQU     $E0EA           ;* TAPAUX Pg 56 RT68MX Manual
+CRLF    EQU     $E141           ;* CRLF
 ZE141   EQU     $E141           ;* CRLF
-ZE16A   EQU     $E16A           ;* CONENT (CONTRL?)
+CONENT  EQU     $E16A           ;* CONENT (CONTRL? CONTRL JMP CONENT)
+ZE16A   EQU     $E16A           ;* CONENT (CONTRL? CONTRL JMP CONENT)
+IN1CHR  EQU     $E350           ;* IN1CHR, INCH, INEEE?
 ZE350   EQU     $E350           ;* IN1CHR, INCH, INEEE?
+OUT1CH  EQU     $E3A6           ;* OUT1CH, OUTCH, OUTEEE?
 ZE3A6   EQU     $E3A6           ;* OUT1CH, OUTCH, OUTEEE?
 
 ;****************************************************
@@ -156,7 +198,8 @@ ZE3A6   EQU     $E3A6           ;* OUT1CH, OUTCH, OUTEEE?
 
         ORG     $0100
 
-; ------------------------------------------------------------------------------   
+; ------------------------------------------------------------------------------
+COLDST
 START   BRA     Z0110                    ;0100: 20 0E          ' .'
 ;* -----------------------------------------------------------------------------
 MAIN                            ; Not MAIN
@@ -167,9 +210,15 @@ Z0102   JSR     Z170F                    ;0102: BD 17 0F       '...'
         LDAA    M003D                    ;0105: 96 3D          '.='
         ORAA    #$80                     ;0107: 8A 80          '..'
         STAA    M002E                    ;0109: 97 2E          '..'
-        JSR     Z036F                    ;010B: BD 03 6F       '..o'
+        JSR     Z036F                    ;010B: BD 03 6F       '..o' BD 03 6E should be 6F ???
         BRA     Z0148                    ;010E: 20 38          ' 8'
 ;* -----------------------------------------------------------------------------
+;* $1BBF - Code Ends
+;* $1BC0 - RAM starts
+;* $1D42 - ???
+;* $1ED2 - ???
+;* $1C77 - Stack
+;* $1FFE - ???
 Z0110   LDS     #M1C77                   ;0110: 8E 1C 77       '..w'
         LDX     #M1ED2                   ;0113: CE 1E D2       '...'
         STX     M004F                    ;0116: DF 4F          '.O'
@@ -192,11 +241,14 @@ Z0124   CLR     ,X                       ;0124: 6F 00          'o.'
         LDX     #M0030                   ;0138: CE 00 30       '..0'
         STX     M0022                    ;013B: DF 22          '."'
         LDX     #M006B                   ;013D: CE 00 6B       '..k'
+;*
 Z0140   CLR     ,X                       ;0140: 6F 00          'o.'
         INX                              ;0142: 08             '.'
         CPX     #M0089                   ;0143: 8C 00 89       '...'
         BNE     Z0140                    ;0146: 26 F8          '&.'
-;
+;* 
+;* Warm start, only gets called once, I think
+;* 
 Z0148   LDX     #Z1000                   ;0148: CE 10 00       '...'
         STX     M0024                    ;014B: DF 24          '.$'
         JSR     Z1755                    ;014D: BD 17 55       '..U'
@@ -210,9 +262,9 @@ Z0148   LDX     #Z1000                   ;0148: CE 10 00       '...'
         JSR     Z0621                    ;015F: BD 06 21       '..!'
         LDX     #M00EA                   ;0162: CE 00 EA       '...'
         STX     M0059                    ;0165: DF 59          '.Y'
-;
-; Read a source line (returns W/Carry clear for EOF)
-;
+;*
+;* Read a source line (returns W/Carry clear for EOF)
+;*
 Z0167   JSR     Z1718                    ;0167: BD 17 18       '...'
         BCS     Z016F                    ;016A: 25 03          '%.'
         JMP     Z07BC                    ;016C: 7E 07 BC       '~..'
@@ -328,7 +380,7 @@ Z0230   BSR     Z0233                    ;0230: 8D 01          '..'
 Z0233   ORAA    #$30                     ;0233: 8A 30          '.0'
 Z0235   JMP     Z034E                    ;0235: 7E 03 4E       '~.N'
 ;* -----------------------------------------------------------------------------
-M0238   fcc     '**ERROR \r'    	 ;* 0238: 2A 2A 20 45 52 52 4F 52 20 0D
+M0238   fcc     '** ERROR \r'    	 ;* 0238: 2A 2A 20 45 52 52 4F 52 20 0D
 ;       BPL     Z0264                    ;0238: 2A 2A          '**'
 ;       BRA     Z0281                    ;023A: 20 45          ' E'
 ;* -----------------------------------------------------------------------------
@@ -559,7 +611,7 @@ M03AD   FCC     'PG \r'
 ;        BRA     Z03BE                    ;03AF: 20 0D          ' .'
 ;* -----------------------------------------------------------------------------
 M03B1
-TITLE   FCC     'A/BASIC 10C\r'
+TITLE   FCC     'A/BASIC 1.0C\r'
 ;       FCB     $41                      ;03B1: 41             'A'
 ;       BLE     Z03F6                    ;03B2: 2F 42          '/B'
 ;       FCB     $41                      ;03B4: 41             'A'
@@ -606,7 +658,7 @@ Z03EC   LDX     M0031                    ;03EC: DE 31          '.1'
 ;* -----------------------------------------------------------------------------
 Z03EF   STX     M0031                    ;03EF: DF 31          '.1'
 ;       LDX     #M0477                   ;03F1: CE 04 77       '..w'
-        LDX     #LANG                    ;03F1: CE 04 77       '..w'
+        LDX     #LANGTBL                 ;03F1: CE 04 77       '..w'
         STX     M0049                    ;03F4: DF 49          '.I'
 Z03F6   LDX     #M0500                   ;03F6: CE 05 00       '...'
         BRA     Z0420                    ;03F9: 20 25          ' %'
@@ -681,7 +733,7 @@ Z046F   ANDA    #$7F                     ;046F: 84 7F          '..'
         RTS                              ;0476: 39             '9'
 ;* -----------------------------------------------------------------------------
 M0477
-LANG
+LANGTBL
         FCC     'END'
         FCB     $80
         FCC     'FOR'
@@ -697,7 +749,7 @@ LANG
         FCC     'INPUT'
         FCB     $87
         FCC     'PRINT'
-        FCC     $88
+        FCB     $88
         FCC     'RETURN'
         FCB     $89
         FCC     'ORG'
@@ -715,7 +767,7 @@ LANG
         FCC     'DIM'
         FCB     $91
         FCC     'POKE'
-        FCC     $92
+        FCB     $92
         FCC     'OPT'
         FCB     $93
         FCC     'GEN'
@@ -735,9 +787,10 @@ LANG
         FCC     'GOSUB'
         FCB     $83
         FCC     'BUF$'
-        FCB     $24
+        FCB     $95
         FCC     'IRQ'
         FCB     $9B
+;* M0500 - Weird
         FCC     'THEN'
         FCB     $C0
         FCC     'TO'
@@ -777,7 +830,7 @@ LANG
         FCC     'STR$'
         FCB     $85
         FCC     'RIGHT$'
-        FCB     82
+        FCB     $82
         FCC     'LEFT$'
         FCB     $81
         FCC     'MID$'
@@ -1382,11 +1435,11 @@ Z07C6   JSR     Z0621                    ;07C6: BD 06 21       '..!'
         BSR     Z0841                    ;07FB: 8D 44          '.D'
         LDAB    M002E                    ;07FD: D6 2E          '..'
         ANDB    #$04                     ;07FF: C4 04          '..'
-        BEQ     Z0826                    ;0801: 27 23          ''#'
+        BEQ     JRTMX                    ;0801: 27 23          ''#'
         LDX     M003E                    ;0803: DE 3E          '.>'
 ;
 Z0805   CPX     M004F                    ;0805: 9C 4F          '.O'
-        BEQ     Z0826                    ;0807: 27 1D          ''.'
+        BEQ     JRTMX                    ;0807: 27 1D          ''.'
         LDAA    ,X                       ;0809: A6 00          '..'
         BSR     Z0829                    ;080B: 8D 1C          '..'
         INX                              ;080D: 08             '.'
@@ -1404,7 +1457,8 @@ Z0805   CPX     M004F                    ;0805: 9C 4F          '.O'
 ;
 ; Jump to RT68
 ;
-Z0826   JMP     ZE16A                    ;0826: 7E E1 6A       '~.j'
+JRTMX
+Z0826   JMP     CONENT                    ;0826: 7E E1 6A       '~.j'
 ;* -----------------------------------------------------------------------------
 Z0829   TSTA                             ;0829: 4D             'M'
         BPL     Z082E                    ;082A: 2A 02          '*.'
@@ -1461,7 +1515,7 @@ M0854   FCC     'PGM LEN\r'
 ;        FCB     $4E                      ;085A: 4E             'N'
 ;        SEC                              ;085B: 0D             '.'
 VALLEN
-M085C   FCC     'VAL LEN\r'
+M085C   FCC     'VAR LEN\r'
 ;        RORB                             ;085C: 56             'V'
 ;        FCB     $41                      ;085D: 41             'A'
 ;        FCB     $52                      ;085E: 52             'R'
@@ -2462,7 +2516,7 @@ Z0F34   BSR     Z0F64                    ;0F34: 8D 2E          '..'
         BNE     Z0F42                    ;0F38: 26 08          '&.'
         BSR     Z0F67                    ;0F3A: 8D 2B          '.+'
 Z0F3C   CLRB                             ;0F3C: 5F             '_'
-        JSR     Z10FC                    ;0F3D: BD 10 FC       '...'
+        JSR     Z10FC                    ;0F3D: BD 10 FC       '...' Z10FC - Junk mid table ???
         BRA     Z0F34                    ;0F40: 20 F2          ' .'
 ;* -----------------------------------------------------------------------------
 Z0F42   CMPA    #$2D                     ;0F42: 81 2D          '.-'
@@ -2726,6 +2780,7 @@ Z10F7   INX                              ;10F7: 08             '.'
         SEC                              ;10F8: 0D             '.'
         RTS                              ;10F9: 39             '9'
 ;* -----------------------------------------------------------------------------
+;* Z10FC - Mid code JSR 10 9D - SBA & Not an OP
 Z10FA   JSR     Z109D                    ;10FA: BD 10 9D       '...'
         INC     >M0052                   ;10FD: 7C 00 52       '|.R'
         LDAA    #$05                     ;1100: 86 05          '..'
@@ -3087,6 +3142,7 @@ Z1358   STX     M0061                    ;1358: DF 61          '.a'
         ASLB                             ;1360: 58             'X'
         ABA                              ;1361: 1B             '.'
         TAB                              ;1362: 16             '.'
+;* TABLE
         LDX     #M137B                   ;1363: CE 13 7B       '..{'
 Z1366   STX     M0043                    ;1366: DF 43          '.C'
         CLRA                             ;1368: 4F             'O'
@@ -3103,36 +3159,47 @@ Z1366   STX     M0043                    ;1366: DF 43          '.C'
         LDX     M0061                    ;1378: DE 61          '.a'
         RTS                              ;137A: 39             '9'
 ;* -----------------------------------------------------------------------------
-; memory
+;* memory, A table
+TABLE
 M137B   FCB     $14                      ;137B: 14             '.'
         FCB     $FC                      ;137C: FC             '.'
+;* 
         FCB     $14                      ;137D: 14             '.'
         FCB     $CC                      ;137E: CC             '.'
+;* 
         FCB     $14                      ;137F: 14             '.'
         CPX     M0015                    ;1380: 9C 15          '..'
         INX                              ;1382: 08             '.'
+;* 
         FCB     $14                      ;1383: 14             '.'
         SBCB    M0014                    ;1384: D2 14          '..'
         SBCA    $14,X                    ;1386: A2 14          '..'
         TST     M1474                    ;1388: 7D 14 74       '}.t'
+;* 
         FCB     $14                      ;138B: 14             '.'
         JMP     $14,X                    ;138C: 6E 14          'n.'
 ;* -----------------------------------------------------------------------------
         TSTA                             ;138E: 4D             'M'
+;* 
         FCB     $14                      ;138F: 14             '.'
         DES                              ;1390: 34             '4'
+;* 
         FCB     $14                      ;1391: 14             '.'
         BGT     Z13A8                    ;1392: 2E 14          '..'
         FCB     $65                      ;1394: 65             'e'
+;* 
         FCB     $14                      ;1395: 14             '.'
         FCB     $5E                      ;1396: 5E             '^'
+;* 
         FCB     $14                      ;1397: 14             '.'
         RTS                              ;1398: 39             '9'
 ;* -----------------------------------------------------------------------------
         FCB     $15                      ;1399: 15             '.'
         FCB     $02                      ;139A: 02             '.'
+;* 
         FCB     $13                      ;139B: 13             '.'
         CMPA    Z1595                    ;139C: B1 15 95       '...'
+;* 
         FCB     $14                      ;139F: 14             '.'
         CMPB    $14,X                    ;13A0: E1 14          '..'
         STAA    M148A                    ;13A2: B7 14 8A       '...'
@@ -3140,10 +3207,13 @@ M137B   FCB     $14                      ;137B: 14             '.'
         STAB    $14,X                    ;13A6: E7 14          '..'
 ;* -----------------------------------------------------------------------------
 Z13A8   JSR     Z1490                    ;13A8: BD 14 90       '...'
+;* 
         FCB     $14                      ;13AB: 14             '.'
         FCB     $ED                      ;13AC: ED             '.'
+;* 
         FCB     $14                      ;13AD: 14             '.'
         FCB     $C3                      ;13AE: C3             '.'
+;* 
         FCB     $14                      ;13AF: 14             '.'
         LDAA    M00D6                    ;13B0: 96 D6          '..'
         TSTA                             ;13B2: 4D             'M'
@@ -3168,6 +3238,9 @@ Z13CF   LDAA    #$EE                     ;13CF: 86 EE          '..'
         CLRB                             ;13D1: 5F             '_'
         BRA     Z1426                    ;13D2: 20 52          ' R'
 ;* -----------------------------------------------------------------------------
+;* 
+;* Seems to be an important point
+;* 
 Z13D4   STAA    M004D                    ;13D4: 97 4D          '.M'
         STAB    M004E                    ;13D6: D7 4E          '.N'
         RTS                              ;13D8: 39             '9'
@@ -3614,20 +3687,18 @@ Z16CB   COMB                             ;16CB: 53             'S'
         LDAA    M0042                    ;16D9: 96 42          '.B'
         BNE     Z1704                    ;16DB: 26 27          '&''
         RTS                              ;16DD: 39             '9'
+;*
+;*
+;*
+RTMXTBL
 ;* -----------------------------------------------------------------------------
-Z16DE   JMP     ZE0EA                    ;16DE: 7E E0 EA       '~..'
-;* -----------------------------------------------------------------------------
-Z16E1   JMP     ZE3A6                    ;16E1: 7E E3 A6       '~..'
-;* -----------------------------------------------------------------------------
-Z16E4   JMP     ZE350                    ;16E4: 7E E3 50       '~.P'
-;* -----------------------------------------------------------------------------
-Z16E7   JMP     ZE0C8                    ;16E7: 7E E0 C8       '~..'
-;* -----------------------------------------------------------------------------
-Z16EA   JMP     ZE0CA                    ;16EA: 7E E0 CA       '~..'
-;* -----------------------------------------------------------------------------
-Z16ED   JMP     ZE141                    ;16ED: 7E E1 41       '~.A'
-;* -----------------------------------------------------------------------------
-Z16F0   JMP     ZE07E                    ;16F0: 7E E0 7E       '~.~'
+Z16DE   JMP     TAPAUX                   ;16DE: 7E E0 EA       '~..'
+Z16E1   JMP     OUT1CH                   ;16E1: 7E E3 A6       '~..'
+Z16E4   JMP     IN1CHR                   ;16E4: 7E E3 50       '~.P'
+Z16E7   JMP     OUT4HS                   ;16E7: 7E E0 C8       '~..'
+Z16EA   JMP     OUT2HS                   ;16EA: 7E E0 CA       '~..'
+Z16ED   JMP     CRLF                     ;16ED: 7E E1 41       '~.A'
+Z16F0   JMP     PDATA1                   ;16F0: 7E E0 7E       '~.~'
 ;* -----------------------------------------------------------------------------
 Z16F3   LDAA    #$12                     ;16F3: 86 12          '..'
         LDAB    #$3C                     ;16F5: C6 3C          '.<'
@@ -3768,11 +3839,11 @@ Z17C1   STAB    M8007                    ;17C1: F7 80 07       '...'
         NOP                              ;17C6: 01             '.'
         RTS                              ;17C7: 39             '9'
 ;* -----------------------------------------------------------------------------
-Z17C8   JMP     ZE3A6                    ;17C8: 7E E3 A6       '~..'
+Z17C8   JMP     OUT1CH                    ;17C8: 7E E3 A6       '~..'
 ;* -----------------------------------------------------------------------------
         BSR     Z1791                    ;17CB: 8D C4          '..'
         BSR     Z177D                    ;17CD: 8D AE          '..'
-        JMP     ZE141                    ;17CF: 7E E1 41       '~.A'
+        JMP     CRLF                    ;17CF: 7E E1 41       '~.A'
 ;* -----------------------------------------------------------------------------
 Z17D2   PSHA                             ;17D2: 36             '6'
         LDAA    ,X                       ;17D3: A6 00          '..'
@@ -3954,11 +4025,11 @@ Z18D8   STX     M0022                    ;18D8: DF 22          '."'
 Z18DE   LDAA    #$11                     ;18DE: 86 11          '..'
         LDAB    #$3C                     ;18E0: C6 3C          '.<'
         BSR     Z1901                    ;18E2: 8D 1D          '..'
-Z18E4   JSR     ZE350                    ;18E4: BD E3 50       '..P'
+Z18E4   JSR     IN1CHR                   ;18E4: BD E3 50       '..P'
         CMPA    #$02                     ;18E7: 81 02          '..'
         BNE     Z18E4                    ;18E9: 26 F9          '&.'
         CLRB                             ;18EB: 5F             '_'
-Z18EC   JSR     ZE350                    ;18EC: BD E3 50       '..P'
+Z18EC   JSR     IN1CHR                   ;18EC: BD E3 50       '..P'
         CMPA    #$03                     ;18EF: 81 03          '..'
         BEQ     Z18FB                    ;18F1: 27 08          ''.'
         STAA    ,X                       ;18F3: A7 00          '..'
@@ -3969,24 +4040,24 @@ Z18EC   JSR     ZE350                    ;18EC: BD E3 50       '..P'
 Z18FB   CLR     ,X                       ;18FB: 6F 00          'o.'
         LDAA    #$13                     ;18FD: 86 13          '..'
         LDAB    #$34                     ;18FF: C6 34          '.4'
-Z1901   JSR     ZE3A6                    ;1901: BD E3 A6       '...'
+Z1901   JSR     OUT1CH                   ;1901: BD E3 A6       '...'
         STAB    M8007                    ;1904: F7 80 07       '...'
         RTS                              ;1907: 39             '9'
 ;* -----------------------------------------------------------------------------
         LDAA    #$3F                     ;1908: 86 3F          '.?'
-        JSR     ZE3A6                    ;190A: BD E3 A6       '...'
-        JSR     ZE0CC                    ;190D: BD E0 CC       '...'
+        JSR     OUT1CH                   ;190A: BD E3 A6       '...'
+        JSR     OUTS                     ;190D: BD E0 CC       '...'
 Z1910   STX     M0022                    ;1910: DF 22          '."'
         STX     M0024                    ;1912: DF 24          '.$'
         LDAB    #$80                     ;1914: C6 80          '..'
-Z1916   JSR     ZE350                    ;1916: BD E3 50       '..P'
+Z1916   JSR     IN1CHR                   ;1916: BD E3 50       '..P'
         CMPA    #$0F                     ;1919: 81 0F          '..'
         BNE     Z1929                    ;191B: 26 0C          '&.'
         CPX     M0024                    ;191D: 9C 24          '.$'
         BEQ     Z192D                    ;191F: 27 0C          ''.'
         DEX                              ;1921: 09             '.'
         LDAA    ,X                       ;1922: A6 00          '..'
-        JSR     ZE3A6                    ;1924: BD E3 A6       '...'
+        JSR     OUT1CH                   ;1924: BD E3 A6       '...'
         BRA     Z1916                    ;1927: 20 ED          ' .'
 ;* -----------------------------------------------------------------------------
 Z1929   CMPA    #$18                     ;1929: 81 18          '..'
@@ -4002,7 +4073,7 @@ Z1936   TSX                              ;1936: 30             '0'
         LDX     ,X                       ;1937: EE 00          '..'
         INS                              ;1939: 31             '1'
 Z193A   INS                              ;193A: 31             '1'
-        JSR     ZE07E                    ;193B: BD E0 7E       '..~'
+        JSR     PDATA1                   ;193B: BD E0 7E       '..~'
         BSR     Z194C                    ;193E: 8D 0C          '..'
         LDX     M0024                    ;1940: DE 24          '.$'
         BRA     Z1910                    ;1942: 20 CC          ' .'
@@ -4013,7 +4084,7 @@ Z1944   STAA    ,X                       ;1944: A7 00          '..'
         CLR     ,X                       ;194A: 6F 00          'o.'
 Z194C   LDAA    #$01                     ;194C: 86 01          '..'
         STAA    M0026                    ;194E: 97 26          '.&'
-        JMP     ZE141                    ;1950: 7E E1 41       '~.A'
+        JMP     CRLF                     ;1950: 7E E1 41       '~.A'
 ;* -----------------------------------------------------------------------------
 Z1953   TSTB                             ;1953: 5D             ']'
         BEQ     Z1916                    ;1954: 27 C0          ''.'
