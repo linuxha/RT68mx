@@ -36,16 +36,16 @@
 ;* IN SINGLE TASK MODE AND MAY BE
 ;* USED FOR ANY OTHER PURPOSE.
 	ORG  0 		;*
-SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC
-CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE
-TIMREM	RMB  1  	;* TASK TIME REMAINING
-TSKTMR	RMB  2  	;* TIMED TASK COUNTER
-CLOCK	RMB  2  	;* RT CLOCK COUNTER
-INTREQ	RMB  1  	;* INTERRUPT REQUEST FLAG
-TSKTMP	RMB  1  	;* RT EXEC TEMP VAL
-PTYTMP	RMB  1  	;* RT EXEC TEMP VAL
-TIMTSK	RMB  1  	;* TIMED TASK INTR STATUS
-SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL
+SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC  ($0000)
+CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE  ($0001)
+TIMREM	RMB  1  	;* TASK TIME REMAINING    ($0002)
+TSKTMR	RMB  2  	;* TIMED TASK COUNTER     ($0003)
+CLOCK	RMB  2  	;* RT CLOCK COUNTER       ($0005)
+INTREQ	RMB  1  	;* INTERRUPT REQUEST FLAG ($0007)
+TSKTMP	RMB  1  	;* RT EXEC TEMP VAL       ($0008)
+PTYTMP	RMB  1  	;* RT EXEC TEMP VAL       ($0009)
+TIMTSK	RMB  1  	;* TIMED TASK INTR STATUS ($000A)
+SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL     ($000B)
 
 	ORG  RAM
 IRQTSK	RMB  2  	;* IRQ TASK/VECTOR
@@ -62,7 +62,7 @@ XTMP	RMB  2  	;*
 IOVECT	RMB  2  	;* ACIA ADDRESS VECTOR
 
 	ORG  RAM+$42	;* 
-STACK	EQU  *  	;* MONITOR STACK
+STACK	EQU  *  	;* MONITOR STACK (Ex: A042)
 
 ;* TASK STATUS TABLE
 ;*
@@ -101,17 +101,19 @@ zSTART  EQU  *
 ;*
 ;* TWO ERRORS ARE CHECKED: CHECKSUM AND
 ;* NO CHANGE
-LOAD	LDAB #$3C	;* TAPE ON CONSTANTS XXXXXXXX
-	LDAA #$11	;* READER ON CODE
+LOAD	LDAB #$3C	;* TAPE ON CONSTANTS XXXXXXXX  0011 1100 (RDR Control on)
+	LDAA #$11	;* READER ON CODE              0001 0001 $11 DC1
 	BSR  RDRCON	;* LET IT ROLL
+        ;;
+        ;; Wait for an S1 or S9
 LOAD2	BSR  INCH	;*
 	CMPA #'S' 	;* LOOK FOR START OF BLOCK
 	BNE  LOAD2	;* BRA IF NOT
 	BSR  INCH	;* 
 	CMPA #'9' 	;* END OF FILE?
 	BNE  LOAD4	;* BRA IF NOT
-LOAD3	LDAB #$34	;* TAPE OFF CONSTANTS XXXXXXXX
-	LDAA #$13	;* 
+LOAD3	LDAB #$34	;* TAPE OFF CONSTANTS XXXXXXXX 0011 0100
+	LDAA #$13	;*                             0001 0011
 RDRCON	STAB PIACB	;* PIA READER CTRL XXXXXXXX
 	BRA  OUTCH	;* ASCII TAPE CONTROL
 LOAD4	CMPA #'1'	;* S1 DATA RECORD? XXXXXXXX
@@ -201,11 +203,12 @@ PDATA1	LDAA 0,X	;* SUBR ENTRY POINT XXXXXXXX
 ;* STARTING ADDR IN BEGADR
 ;* ENDING ADDR IN ENDADR
 ;*
-DUMP	JSR  CRLF	;* CR AND LF XXXXXXXX
+DUMP:   JSR  CRLF	;* CR AND LF XXXXXXXX
 	LDX  #BEGADR	;* 
 	BSR  OUT4HS	;* PRINT BEGINNING ADDR
 	LDAB #16 	;* BYTE COUNT FOR LINE
 	LDX  BEGADR	;* GET BEG ADDR
+
 DUMP1	BSR  OUT2HS	;* PRINT A BYTE XXXXXXXX
 	DEX		;* 
 	CPX  ENDADR	;* DONE YET?
@@ -228,14 +231,18 @@ INHEX	BSR  INCH	;* INPUT ONE HEX CHAR XXXXXXXX
 	SUBA #$30	;* 
 	BCS  HBAD	;* 
 	CMPA #9 	;* 
-	BLS  IHRET	;* 
+;* 
+;* Example local label
+;* Note there is no label between branch and local label
+;* 
+	BLS  $$IHRET	;* 
 	SUBA #7 	;* 
 	BCS  HBAD	;* 
 	CMPA #15 	;* 
 	BHI  HBAD	;* 
-IHRET	RTS		;* (LABEL/NM only?)
+$$IHRET	RTS		;* (LABEL/NM only?)
 
-	NOP		;* 
+	NOP		;* ??? Filler?
 	NOP		;* 
 
 ;* OUTPUT BYTE (TWO HEX CHARS) POINTED
@@ -359,56 +366,90 @@ JPDATA	JMP  PDATA1	;*
 ;* AND EXECUTES THE APPROPRIATE FUNCTION.
 ;
 ;* ENTRY POINT FOR RESTART
-INIT	LDS  #STACK	;* INITIALIZE PERIPHERALS XXXXXXXX
-	STS  SPTMP	;* 
-	LDX  #IO	;* 
-	STX  IOVECT	;* INIT ACIA VECTOR
+INIT	LDS     #STACK	;* INITIALIZE PERIPHERALS XXXXXXXX
+	STS     SPTMP	;* 
+	LDX     #IO	;* Base address of ACIA/PIA
+	STX     IOVECT	;* INIT ACIA VECTOR
 ;* INITIALIZE CONTROL PIA
-	INC  4,X 	;* 
-	LDAB #$16	;* 
-	STAB 5,X 	;* 
-	INC  4,X 	;* 
-	LDAA #$05	;* 
-	STAA 6,X 	;* 
-	LDAA #$34	;* 
-	STAA 7,X 	;* 
-;* INITIALIZE ACIA AT $8000
-;* 7 bytes, 1 byte too many
+;;;
+;;; Port A $F004
+;;; 
+        ;;
+        ;; A /RESET has the effect of zeroing all the PIA registers
+        ;; This will PA0-PA7, PB0-PB7, CA2, & CB2 as inputs &
+        ;; all interrupts disabled
+        ;;
+        ;; PIADA
+	INC     4,X 	;* WHY? IO+4, PIADA - Data Reg A (0000 0001)
+        ;;       *
+        ;; 0001 0110 ($16)                     ( 0001 0110 )
+        ;; CA2   - IRQ Dis, Lo-to-Hi trasition ( ..01 0... )
+        ;; PIADA - Output Register selected    ( .... .1.. )
+        ;; CA1   - IRQ Dis, Lo-to-Hi trasition ( .... ..10 )
+        ;; 
+	LDAB    #$16	;*                             0001 0110
+	STAB    5,X 	;* IO+5, PIACA - Control Reg A
+	INC     4,X 	;* WHY? (0000 0010)
+;;;
+;;; Port B $F006
+;;; 
+	LDAA    #$05	;*                             0000 0101
+	STAA    6,X 	;* IO+6, PAIDB - Data Reg B
+        ;;       *
+        ;; 0011 0100
+        ;; CB2   - IRQ Dis, Hi-to-Lo transition
+        ;; PIADB - Output Register selected
+        ;; CB1   - IRQ Dis, Hi-to-Lo transition
+        ;; 
+	LDAA    #$34	;*                             0011 0100
+	STAA    7,X 	;* IO+7, PIACB - Control Reg B
 ;*
+;* INITIALIZE ACIA AT IO (ex. $8000)
+;* 7 bytes
 ;*
-        jsr     UARTRST
-        nop
+        jsr     UARTRST ;* Print hello str
+        nop             ;* Filler to keep the entry points the same
         nop
         nop
         nop
 ;*
-CONENT	CLR  BKPOP	;* CONSOLE ROUTINE ENTRY POINT XXXXXXXX
-	CLR  RTMOD	;* 
-CONSOL	CLR  ERRFLG	;*
-	LDS  #STACK	;* INIT SP
-	BSR  CRLF	;* 
-	LDAA #'$' 	;* PRINT PROMPT
-	BSR  OUTEEE	;* 
-	BSR  INEEE	;* INPUT COMMAND CODE
+CONENT	CLR     BKPOP	;* CONSOLE ROUTINE ENTRY POINT XXXXXXXX
+	CLR     RTMOD	;* 
+CONSOL	CLR     ERRFLG	;*
+	LDS     #STACK	;* INIT SP      ;* E173 8E A0 42
+    IFDEF       DEFAULT
+	BSR     CRLF	;*              ;* E176 8D C9
+	LDAA    #'$' 	;* PRINT PROMPT ;* E178 86 24
+	BSR     OUTEEE	;*              ;* E17A 8D 55
+    ELSE
+;	BSR     CRLF	;*              ;* E176 8D C9
+;	LDAA    #'$' 	;* PRINT PROMPT ;* E178 86 24
+;	BSR     OUTEEE	;*              ;* E17A 8D 55
+	LDX	#PRMPTST;* PRINT PROMPT ;* E176 CE xx xx 
+ 	JSR	PDATA1  ;*              ;* E179 BD E1 76
+;                       ;*              ;* E17C ... 
+    ENDIF
+	BSR     INEEE	;* INPUT COMMAND CODE ;* E17C 8D 2E
 
 ;* COMMAND TABLE LOOKUP/EXECUTE LOOP
 ;* SEARCHES FOR COMMAND CODE ON TABLE TO OBTAIN
 ;* FUNCTION SUBROUTINE ADDRESS.
-	LDX  #CMDTBL-3	;* INIT X TO BEGINNING OF TABL
+	LDX     #CMDTBL-3	;* INIT X TO BEGINNING OF TABL
 CMSRCH	INX  		;* ADV TO NEXT ENTRY XXXXXXXX
 	INX		;* 
 	INX		;* 
-	LDAB 0,X 	;* GET CODE FROM TABLE
-	BEQ  CMDERR	;* IF ZERO, END OF TABLE
+	LDAB    0,X 	;* GET CODE FROM TABLE
+	BEQ     CMDERR	;* IF ZERO, END OF TABLE
 	CBA		;* COMMAND CODE MATCH COMPARE
-	BNE  CMSRCH	;* BACK TO ADV IF NOT
-	LDX  1,X 	;* GET CMND SUBR ADDR FROM TABLE
-	JSR  0,X 	;* DO IT
-TSTENT	BSR  ERTEST	;* TEST FOR ERROR XXXXXXXX
-GOCON	BRA  CONSOL	;* GET ANOTHER CMND XXXXXXXX
+	BNE     CMSRCH	;* BACK TO ADV IF NOT
+	LDX     1,X 	;* GET CMND SUBR ADDR FROM TABLE
+	JSR     0,X 	;* DO IT
+TSTENT	BSR     ERTEST	;* TEST FOR ERROR XXXXXXXX       (0xE18F)
+GOCON	BRA     CONSOL	;* GET ANOTHER CMND XXXXXXXX
 
-CMDERR	LDAB #'6'	;* ILLEGAL COMMAND CODE XXXXXXXX
-	BRA  ERROR	;* 
+CMDERR	LDAB    #'6'	;* ILLEGAL COMMAND CODE XXXXXXXX
+	BRA     ERROR	;* 
+;* -----------------------------------------------------------------------------
 
 ;* SUBR TO SET 0R REMOVE BREAKPOINTS
 SETBKP	LDAA BKPOP	;* GET BKPT FLAG OR OPCODE XXXXXXXX
@@ -419,36 +460,53 @@ SETBKP	LDAA BKPOP	;* GET BKPT FLAG OR OPCODE XXXXXXXX
 	STAA 0,X 	;* 
 	STAB BKPOP	;* 
 SBRET	RTS		;* (LABEL/NM only?)
+;* -----------------------------------------------------------------------------
 
 ;* "D" DUMP COMMAND
 DMPCOM	BSR  GET2AD	;*
 	JMP  DUMP	;* 
+;* -----------------------------------------------------------------------------
 
 INEEE	JMP  IN1CHR	;*
+;* -----------------------------------------------------------------------------
 
 ;* SUBR TO PREPARE FOR USER PROGRAM
 ;* EXECUTION. CALLED BY G, E, & S COMMANDS
 ;*
 SETRUN	BSR  SETBKP	;* SET BKPT IF ANY XXXXXXXX
-	LDAB #$1E	;* 
+	LDAB #$1E	;*                          0001 1110
 	LDAA RTMOD	;* TEST IF MULTITASK MODE
 	BEQ  SETRN2	;* BRA IF NOT MULTI
-	INCB		;* ENABLE RT CLOCK INTR
+	INCB		;* ENABLE RT CLOCK INTR     0001 1111
 	CLRA		;* 
 	STAA SYSMOD	;* 
 SETRN2	LDAA PIADA	;*
-	STAB PIACA	;* 
+	STAB PIACA	;* CA1 & CA2 Interrupt enabled (low to high transistion)
 RETURN	RTS		;* (LABEL/NM only?)
 
-;* "B" BREAKPOINT COMMAND ROUTINE
-BKPCOM	CLR  BKPOP	;*
-	BSR  GETADR	;* 
-	STX  BKPADR	;* 
-	LDAA #$3F	;* 
-	STAA BKPOP	;* 
-	RTS		;* 
-
-OUTEEE	JMP  OUT1CH	;*
+;* "B" BREAKPOINT COMMAND ROUTINE (@FIXME: doesn't load $3F into BKPADR)
+    IFDEF    DEFAULT
+BKPCOM	CLR  BKPOP	;* E1C3 : 7F A0 0B               BKPCOM	CLR  BKPOP	;*
+	BSR  GETADR	;* E1C6 : 8D 11                      	BSR  GETADR
+	STX  BKPADR	;* E1C8 : FF A0 0C                   	STX  BKPADR
+	LDAA #$3F	;* E1CB : 86 3F                      	LDAA #$3F
+	STAA BKPOP	;* E1CD : B7 A0 0B                   	STAA BKPOP
+	RTS		;* E1D0 : 39                         	RTS
+    ELSE
+BKPCOM	jsr  BKPCMD	;* E1C3 : 7E A0 0B
+	rts     	;* E1C6 : xx
+	nop             ;* E1C7
+	nop             ;* E1C8
+	nop             ;* E1C9
+	nop             ;* E1CA
+	nop             ;* E1CB
+	nop             ;* E1CC
+	nop             ;* E1CD
+	nop             ;* E1CE
+	nop             ;* E1CF
+	nop             ;* E1D0
+    ENDIF
+OUTEEE	JMP  OUT1CH	;* E1D1
 
 ;* SUBR TO READ ONE OR TWO ADDRESS
 ;* PARAMETERS, COMMA LEADS ADDRESSES,
@@ -560,8 +618,8 @@ RUNBKP	TSX		;* GET SP IN XR XXXXXXXX
 	LDAB #$37	;* SET ERROR FLAG
 	STAB ERRFLG	;* 
 RUNBK2	JSR  SETBKP	;* REMOVE BKPT OPCODE XXXXXXXX
-	LDAA #$16	;* 
-	STAA PIACA	;* OFF RT CLOCK + ABORT INTR
+	LDAA #$16	;*                             0001 0110
+	STAA PIACA	;* OFF RT CLOCK + ABORT INTR (CA1 & CA2)
 	STS  SPTMP	;* SAVE TASK SP
 	JSR  PRSTAK	;* DUMP STACK
 	JMP  TSTENT	;* ENTER CONSOLE MONITOR
@@ -601,11 +659,16 @@ INTBAD	TSX		;* (LABEL/NM only?)
 
 ;* NMI INTERRUPT HANDLER
 ;*
+;* There are at least 3 interrupts
+;* 1. CA1 - Clock/Ticks interupts (Pin 40)
+;* 2. CA2 - Abort                 (Pin 39)
+;* 3. Something else - User
+;*
 ;* TEST CONTROL PIA FOR ABORT OR CLOCK
 ;* INTERRUPT AND PROCESS SAME
 ;* IF NOT, EXECUTES USER INTERRUPT
 NMI	EQU  *  	;* NMI VECTOR DEST.
-	LDAA PIACA	;* GET PIA STATUS REG
+	LDAA PIACA	;* GET PIA STATUS REG    (| CA1 | CA2 | ... | )
 	LDAB PIADA	;* CLEAR PIA INTR FLGS
 	ASLA		;* 
 	BMI  RUNBK2	;* BRA IF ABORT INTR
@@ -780,16 +843,25 @@ FNDTSB	PSHA		;* (LABEL/NM only?)
 ;* WHICH WILL DEFAULT TO $8000
 
 ;* READ CHAR WITHOUT PARITY OR RUBOUT
+    IFDEF    NJC
 IN1CHR	BSR  INBYTE	;* GET BYTE XXXXXXXX
 	ANDA #$7F	;* STRIP PARITY BIT
 	CMPA #$7F	;* TEST FOR RUBOUT
 	BEQ  IN1CHR	;* AGAIN IF RUBOUT
 	RTS		;* 
-
+    else
+IN1CHR	BSR  INBYTE	;* GET BYTE XXXXXXXX
+	ANDA #$7F	;* STRIP PARITY BIT
+	bsr  OUT1CH
+	RTS		;* 
+        nop
+        nop
+    endif
 ;* READ 8-BIT BYTE
-INBYTE	PSHB		;* (LABEL/NM only?)
+INBYTE	PSHB		;* (LABEL/NM only?) 0xE45F
 	BSR  IOAUX	;* SAVE XR + SAMPLE TYPE
-	BNE  ACIAIN	;* 
+;	BNE  ACIAIN	;* 
+	bra  ACIAIN
 
 ;* PIA SOFTWARE UART ROUTINE -
 ;* INPUT ONE CHAR WITHOUT PARITY
@@ -828,9 +900,13 @@ ACIAIN	LDAB 0,X	;* GET STAT REG XXXXXXXX
 ;* I/O SETUP SUBROUTINE
 IOAUX	STX  XTMP	;* SAVE XR XXXXXXXX
 	LDX  #IO	;* LOAD XR WITH PERIPH PTR
-	LDAB 6,X 	;* TEST FOR ACIA OR PIA
-	BITB #$20	;* 
-	;BEQ  AUXRET	;* BRA IF PIA
+;	LDAB 6,X 	;* TEST FOR ACIA OR PIA
+;	BITB #$20	;* 
+;	BEQ  AUXRET	;* BRA IF PIA
+        nop
+        nop
+        nop
+        nop
         nop
         nop
 	LDX  IOVECT	;* GET ACIA ADDRESS
@@ -849,8 +925,12 @@ STRTBT	INC  6,X  	;*
 ;* PIA OR ACIA
 OUT1CH	PSHB		;* SAVE ACC B XXXXXXXX
 	BSR  IOAUX	;* SETUP FOR ROUTINE
-	BNE  ACOUT	;* USE ACIA SUBR IF TRUE
+;	BNE  ACOUT	;* USE ACIA SUBR IF TRUE -> ACOUT
+	bra  ACOUT
 
+;*
+;* Fall through to PIA
+;*
 ;* PIA SOFTWARE UART CHAR OUTPUT
 	LDAB #4 	;* 
 	STAB 4,X 	;* SPACE FOR START BIT
@@ -858,16 +938,18 @@ OUT1CH	PSHB		;* SAVE ACC B XXXXXXXX
 	LDAB #10 	;* INIT. BIT COUNTER
 	BSR  STRTBT	;* RESET TIMER
 ;* BIT OUTPUT LOOP
+;.loop: ; $$loop: also fails
 POUT1	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
 	STAA 4,X 	;* SET BIT OUTPUT
 	SEC		;* 
 	RORA		;* SHIFT IN NEXT BIT
 	DECB		;* DEC BYTE COUNT
+;	BNE  .loop	;* BRA IF NOT LAST BIT DOESN"T WORK - $$loop also Fails!
 	BNE  POUT1	;* BRA IF NOT LAST BIT
 	BRA  CHKSTB	;* 
 
 ;* ACIA CHAR OUTPUT ROUTINE
-ACOUT	LDAB 0,X	;* GET STAT REG XXXXXXXX
+ACOUT	LDAB 0,X	;* GET STAT REG XXXXXXXX ;* E3C0
 	LSRB		;* SHIFT RDY BIT TO C
 	LSRB		;* 
 	BCC  ACOUT	;* BRA IF NOT READY
@@ -911,13 +993,23 @@ UARTRST ldaa    #ACIARST        ;* RESET CODE
         staa    0,X
         ldaa    #_8N1x16        ;* 8N1 NON-INTERRUPT x16
         staa    0,X
+	LDX	#HELLOST
+	JSR	PDATA1
         rts
 
+BKPCMD	CLR     BKPOP           ;*
+	jsr     GETADR          ;* 
+	STX     BKPADR          ;*
+	LDAA    #$3F            ;* 
+	STAA    0,X             ;* 
+	RTS                     ;* 
 ;* -----------------------------------------------------------------------------
 ;*
 ;* -----------------------------------------------------------------------------
-HELLOST fcb     '\12\r\nRT68-MP02 0.1.2'  ;* 12 = ^L (CLS) based on 1.1
+HELLOST fcb     '\12\r\nRT68-MP02 0.1.3' ;* 12 = ^L (CLS) based on 1.1
         fcb     CTRL_D                   ;*
+PRMPTST fcb     '\n\r$ '                 ;*
+        fcb     CTRL_D
 ;* -----------------------------------------------------------------------------
 ;*
         MFILL
