@@ -1,5 +1,6 @@
 *
 * srec_cat  abasic.s19 -o abasic.bin -binary
+* f9dasm -6800 -info abasic.info abasic-10c.s19 |&  sed '/JMP\|BRA\|RTI\|RTS/a ;* -----------------------------------------------------------------------------' | & tee abasic.asm
 * f9dasm -6800 -info abasic.info -offset 0100 -begin 0100 -end 1000 abasic.bin |&  sed '/JMP\|BRA\|RTI\|RTS/a ;* -----------------------------------------------------------------------------' |& tee abasic.asm
 * egrep -i 'BCC|BCS|BEQ|BGE|BGT|BHI|BLE|BLS|BLT|BMI|BNE|BPL|BRA|BSR|BVC|BVS|' rtedit.s
 * egrep -i 'JMP|JSR' rtedit.s

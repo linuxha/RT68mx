@@ -4,7 +4,7 @@ Microware's RT/68MX Real Time OS for the Motorola 6800 (1977).
 
 RT68mx is a real time OS by Microware. Microware has been kind enough to allow us to make the code available. It's a very interesting OS as it's quite small, about 1K in size, has very little overhead using 128 bytes of RAM for the OS. The rest is for programs/applications/processes.
 
-RT68mx can handle 8 processes.
+RT68mx can handle 8 processes but can be expanded for more processes.
 
 # Table of Contents
 
@@ -14,15 +14,37 @@ RT68mx can handle 8 processes.
 
 # History
 
-I grew up working with systems such as SWTPC and operating systems such as TSC FLEX, Microware's OS-9 and RT/68MX. It was a fun and interesting time. While today we have much more resources and better tools the past wasn't all that bad. Things were a lot more manual but the learning experience was what helped us to build what we have today.
+Motorola created the 6800 in 1974, and the SWTPC Computer was built in 1975. Before the 1970's and the start of the microcomputers, computers were mostly either mini (like DEC's PDP seriies) or Mainframe (like IBMs Mainframe line). The 1970s brought about small CPUs such as the 8080 and the 6800. Making it possible for people to buy kits to build microcomputers.
 
-RT/68MX, RT/Edit and A/BASIC are software packages from Microware Systems Corporation, Copyright 1977. This package is an interesting environment in that it's designed to run on the embedded board and with a cheap cassette recorder. Since we're in computers, it's called a cassette drive. No matter what it's called it was a common and inexpensive, from $40-$100. Compared to a floppy drive which cost many times more, you just needed to learn to deal with the cassettes. But you have a development environment that reduced the cost significantly.
+In the 80's I grew up working with systems such as SWTPC and operating systems such as TSC FLEX, Microware's OS-9 and RT/68MX. It was a fun and interesting time. While today we have much more resources and better tools the past wasn't all that bad. Things were a lot more manual but the learning experience was what helped us to build what we have today.
+
+RT/68MX, RT/Edit and A/BASIC are software packages from Microware Systems Corporation, Copyright 1977. This package is an interesting environment in that it's designed to run on the embedded board and with a cheap cassette recorder. Since we're in computers, it's called a cassette drive. No matter what it's called it was common and inexpensive, from $40-$100. Compared to a floppy drive which cost many times more, you just needed to learn to deal with the cassettes. But you have a development environment that reduced the cost significantly.
 
 These pages and files will attempt to put all the files and documents together so as to demonstrate what this development env was like. It is a much different development environment thatn we have today. But it was exciting to be pioneers. And it is an understatement to say that it's amazing to look back and see what we accomplished.
 
+## Bonus History
+
+Stanley Ruppert had a table of Motorola 6800 systems. And he briefly talks about his history with RT68MX. As a young man he setup the 6800 to control a physics experiment.
+
+https://youtu.be/ST_qDWVt7MA?si=YMw0J-PgICCCX1U5 (starts at 49:10)
+
+During the video Stanley tells the story of how RT/68 - the real time
+operating system began. Ken Kaplan and one other person wrote for the
+6800 CPU while in university. It was because of this that they
+developed a relationship with Motorola, and got hired to make BASIC09
+(and eventually OS9 to host it) while the 6809 was being developed.
+For those who may not be aware, OS-9 is still being sold and supported
+today. The 6809 version of OS-9 was released (need the license) and
+NitrOS-9 came into being. I have systems that run OS-9 (OSK) on the
+Mototola 68K systems I have.
+
 # RT68/MX
 
-This version of RT68mx source code has been modified to specifically assemble properly with the asl macro assembler ([links below](#Source)). I've also taken the liberty to clean up and reformat the source. Sorry I understand why it was done but I've always hated the way the source code looked.
+This version of RT68mx source code has been modified to specifically
+assemble properly with the asl macro assembler ([links
+below](#Source)). I've also taken the liberty to clean up and reformat
+the source. Sorry I understand why it was done but I've always hated
+the way the source code looked.
 
 RT/68 provides three modes which are mutually exclusive: Console Monitor to load, save and debug programs; Single Task Mode to execute existing Mikbug(TM) software without modification; and Multi-Task Mode which is the real time multiprogramming mode.
 
@@ -36,7 +58,7 @@ A/BASIC is a basic compiler for use with RT68mx. The compiled code can be run as
 
 This is a work in progress. Currently there appear to be a few different 'ABASIC's. One is the ABASIC/RTEDIT that belongs with RT/68MX. This doesn't run under an operating system like FLEX or OS-9 but rather RT/68MX and is loaded, compiles and saves to tape. This version can run mulit-task or single task. We currently have an rtbasic-10c.s19 file (A/BASIC) from the manual. We're working to disassemble the code and will post that here. Then there is a modified version that runs under 6800 FLEX. This version is single task only. Then there appears to be another that I don't have details for yet.
 
-The code in the ABASIC-FLEX directory is the 6800(?) FLEX version.
+The code in the ABASIC-FLEX directory is the 6800 FLEX version. But it can compile 6800 code for the RT68MX OS (cool). The Flex version is A/BASIC version 2.0 (2.1F & 3.0?). There are also ABASIC disks under the FHL (Frank Hogg Labs) which appears to be a 6809 version by TSC.
 
 I'll update this as I get things sorted out better.
 
@@ -44,7 +66,7 @@ I'll update this as I get things sorted out better.
 
 RTEDIT is an editor that runs under RT68mx that can be used to edit the A/BASIC code.
 
-This is a work in progress. There are some files under the FuFu Flex collection which we think is a modified version to work under Flex. We do have a file: rtedit.s19, which we are in the process if disassembling. We will post the results here.
+This is a work in progress. There are some files under the FuFu Flex collection which we think is a modified version to work under Flex. We do have a file: rtedit.s19, which we are in the process if disassembling. We will post the results here. The RTEdit command is interesting because it is compile BASIC the source code is in the manual and I'm trying to figure it out. 
 
 # Mikbug
 
@@ -346,6 +368,27 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 | src/rt68mx.s | Code that closely matches the original S19 file in the RT68MX Manual |
 | src/rt68mx-s.lst | Listing generated by ASL |
 
+# Files: ABASIC-FLEX
+
+| File | Description |
+| -- | -- |
+| ABASICFL.CMD | ABASIC for Flex (v3.0), has TWRITE |
+| ABASICFL.TXT | |
+| ABASICRT.BIN | ABASIC for RT68MX (v1.0c), has TWRITE |
+| ABASICRT.TXT | |
+| ABASICSW.BIN | ABASIC for the SWTBUG (v1.1c), has TWRITE |
+| ABASICSW.TXT | |
+| ABASINT.CMD | ABASIC Interpreter, no TWRITE |
+| ABCOMPIL.CMD | ABASIC Compiler Flex, no TWRITE |
+| COPY.CMD | |
+| CTIO.TXT | |
+| DIR.CMD | |
+| DSKIO.TXT | |
+| INFO.TXT | |
+| LD.CMD | |
+| LIST.CMD | |
+| RTIO.TXT | |
+
 # Source
 
 - FuFu mail list - <mailto:fufu-subscribe@flexusergroup.com>
@@ -355,6 +398,6 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 
 # Credits
 
-- Microware, creaters of RT68mx & OS9.
-- Stanley Ruppert
-- Michael Evenson
+- [Microware, creaters of RT68mx & OS9.](https://microware.com/index.php/architecture)
+- [Stanley Ruppert](https://subethasoftware.com/)
+- [Michael Evenson](http://www.flexusergroup.com/forum)
