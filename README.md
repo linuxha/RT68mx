@@ -14,7 +14,7 @@ RT68mx can handle 8 processes but can be expanded for more processes.
 
 # History
 
-Motorola created the 6800 in 1974, and the SWTPC Computer was built in 1975. Before the 1970's and the start of the microcomputers, computers were mostly either mini (like DEC's PDP seriies) or Mainframe (like IBMs Mainframe line). The 1970s brought about small CPUs such as the 8080 and the 6800. Making it possible for people to buy kits to build microcomputers.
+The transistor was basically invented in 1948 (Bell Labs, the first transistor computer 1954 (Tradic, Bell Labs, contested), the first flight of NASA's Appolo Guide Computer 1966, the first general-purpose, programmable microprocessor 1971 (Intell 4004). the first Altair kits, 1975, Motorola created the 6800 in 1974, and the SWTPC Computer was built in 1975. Before the 1970's and the start of the microcomputers, computers were mostly either mini (like DEC's PDP series) or Mainframe (like IBMs Mainframe line). The 1970s brought about small CPUs such as the 8080 and the 6800. Making it possible for people to buy kits to build microcomputers.
 
 In the 80's I grew up working with systems such as SWTPC and operating systems such as TSC FLEX, Microware's OS-9 and RT/68MX. It was a fun and interesting time. While today we have much more resources and better tools the past wasn't all that bad. Things were a lot more manual but the learning experience was what helped us to build what we have today.
 
@@ -38,13 +38,11 @@ today. The 6809 version of OS-9 was released (need the license) and
 NitrOS-9 came into being. I have systems that run OS-9 (OSK) on the
 Mototola 68K systems I have.
 
+Oh, I found Microware ads from 1979. Seems Microware had A/D, D/A interfaces, a 6800 Chess, a LISP Interpreter, Dr Eliza, A/BASIC Compiler (Disk and cassette version), A/BASIC Source Generator (I had not heard of this), A/BASIC Interpreter, RT68MX (6830 ROM) and RT68MXP (2708 ROM). The Disk version was available for Flex/Mini-Flex, and Smoke Signals Broadcast DOS-68. The ads mention mini-disk (5.25") but not Flex directly.
+
 # RT68/MX
 
-This version of RT68mx source code has been modified to specifically
-assemble properly with the asl macro assembler ([links
-below](#Source)). I've also taken the liberty to clean up and reformat
-the source. Sorry I understand why it was done but I've always hated
-the way the source code looked.
+This version of RT68mx source code has been modified to specifically assemble properly with the asl macro assembler ([links below](#Source)).  I've also taken the liberty to clean up and reformat the source. Sorry I understand why it was done but I've always hated the way the source code looked.
 
 RT/68 provides three modes which are mutually exclusive: Console Monitor to load, save and debug programs; Single Task Mode to execute existing Mikbug(TM) software without modification; and Multi-Task Mode which is the real time multiprogramming mode.
 
@@ -389,6 +387,12 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 | LIST.CMD | |
 | RTIO.TXT | |
 
+# ToDo
+
+There's a lot to do. I have to complete the disassembly and I need to get a working setup so I can actually demonstrate the RT68MX dev env. So far I've found quite a few quirks but I'm uncertain if those quirks are original problems or problems I've introduced.
+
+In the coming weeks I'll get getting a second [Peripheral Technoloy PT68-1](https://peripheraltech.com/PT68-1.htm) (2HHz, 6802 processor), which I'll setup as a SWTPC with RT68MX, a 555 timer for interrupts (50Hz) and the Abort button. I haven't figured out how to emulate 2 tapes drives yet but I am leaning towards a Raspberry Pi and 2 USB sound dongles. This second PT68-1 will be more setup like the original SWTPC (except the ROM needs to be updated so the interrupt vectors are at $FFF8). So the IO at $8000, free RAM at $A000 and ROM at $E000.
+
 # Source
 
 - FuFu mail list - <mailto:fufu-subscribe@flexusergroup.com>
@@ -401,3 +405,4 @@ I've currently added an IFDEF to allow the RT/68MX to be compiled at $FC00 which
 - [Microware, creaters of RT68mx & OS9.](https://microware.com/index.php/architecture)
 - [Stanley Ruppert](https://subethasoftware.com/)
 - [Michael Evenson](http://www.flexusergroup.com/forum)
+- [Frederic Brown/Peripheral Technology](https://peripheraltech.com/)
