@@ -2541,6 +2541,10 @@ Z0EF9   STX     M0031                    ;0EF9: DF 31          '.1'
         INS                              ;0F0C: 31             '1'
         LDAA    $01,X                    ;0F0D: A6 01          '..'
         BEQ     Z0F13                    ;0F0F: 27 02          ''.'
+;;;
+;;; Stanley notes (correctly) that M003E is 16b. But the manual has it very
+;;; clearly as 97 3E (STAA M003E). So leaving this for now
+;;; 
         STAA    M003E                    ;0F11: 97 3E          '.>'
 Z0F13   LDX     M0031                    ;0F13: DE 31          '.1'
         CLRB                             ;0F15: 5F             '_'
@@ -2567,7 +2571,8 @@ Z0F34   BSR     Z0F64                    ;0F34: 8D 2E          '..'
         BNE     Z0F42                    ;0F38: 26 08          '&.'
         BSR     Z0F67                    ;0F3A: 8D 2B          '.+'
 Z0F3C   CLRB                             ;0F3C: 5F             '_'
-        JSR     Z10FC                    ;0F3D: BD 10 FC       '...' Z10FC - Junk mid table ???
+;       JSR     Z10FC                    ;0F3D: BD 10 FC       '...' Z10FC - Junk mid table ???
+        JSR     Z10BC                    ;0F3D: BD 10 BC       '...' Stanley's suggests
         BRA     Z0F34                    ;0F40: 20 F2          ' .'
 ;* -----------------------------------------------------------------------------
 Z0F42   CMPA    #$2D                     ;0F42: 81 2D          '.-'
@@ -3750,7 +3755,7 @@ OUT2HSV JMP     OUT2HS                   ;16EA: 7E E0 CA       '~..'
 CRLFV   JMP     CRLF                     ;16ED: 7E E1 41       '~.A'
 PDATA1V JMP     PDATA1                   ;16F0: 7E E0 7E       '~.~'
 ;* -----------------------------------------------------------------------------
-Z16F3   LDAA    #$12                     ;16F3: 86 12          '..'
+Z16F3   LDAA    #$12                     ;16F3: 86 12          '..' Pg 47 of the ABASIC manual
         LDAB    #$3C                     ;16F5: C6 3C          '.<'
         BSR     Z1708                    ;16F7: 8D 0F          '..'
         LDAB    M0042                    ;16F9: D6 42          '.B'
@@ -4072,7 +4077,7 @@ Z18D8   STX     M0022                    ;18D8: DF 22          '."'
         CLC                              ;18DC: 0C             '.'
         RTS                              ;18DD: 39             '9'
 ;* -----------------------------------------------------------------------------
-Z18DE   LDAA    #$11                     ;18DE: 86 11          '..'
+Z18DE   LDAA    #$11                     ;18DE: 86 11          '..' Pg 45 of the ABASIC manual
         LDAB    #$3C                     ;18E0: C6 3C          '.<'
         BSR     Z1901                    ;18E2: 8D 1D          '..'
 Z18E4   JSR     IN1CHR                   ;18E4: BD E3 50       '..P'
