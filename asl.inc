@@ -56,15 +56,15 @@ CTRL_Q  EQU $11                 ; XOFF
 CTRL_S  EQU $13                 ; XON
 CTRL_U  EQU $15                 ; NAK
 ;
-STX     EQU     $02
-ETX     EQU     $03
+STX     EQU     $02             ; ^B
+ETX     EQU     $03             ; ^C
 
 CTRLK   EQU     $0B
 CTRLO   EQU     $0F
-DC1     EQU     $11             ;* Device control 1
-DC2     EQU     $12             ;* Device control 2
-DC3     EQU     $13             ;* Device control 3
-DC4     EQU     $14             ;* Device control 4
+DC1     EQU     $11             ;* Device control 1 ^Q Reader Start
+DC2     EQU     $12             ;* Device control 2 ^R Punch Start
+DC3     EQU     $13             ;* Device control 3 ^S Reader Stop
+DC4     EQU     $14             ;* Device control 4 ^T Punch Stop
 CTRLX   EQU     $18
 CTRLZ   EQU     $1A
 ;
