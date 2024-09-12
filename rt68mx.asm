@@ -14,6 +14,23 @@
 ;*	*	       *
 ;*	****************
 ;*
+;* Semantic version
+;*
+;* Given a version number MAJOR.MINOR.PATCH, increment the:
+;*
+;* MAJOR version when you make incompatible API changes (except for 0.x.x -> 1.x.x)
+;* MINOR version when you add functionality in a backward compatible manner
+;* PATCH version when you make backward compatible bug fixes
+;*
+;* Additional labels for pre-release and build metadata are available as
+;* extensions to the MAJOR.MINOR.PATCH format.
+;*
+;* Example:
+;* 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2
+;*   < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
+;*
+SEMVER  EQU     "1.1.0"        ;* Original, almost
+;*
 ;* RT/68MX REAL TIME OPERATING SYSTEM
 ;* (REVISED VERSION OF RT/68MR)
 ;*
@@ -30,7 +47,7 @@
 ;* BEGINNING AT 0, THESE ARE NOT NEEDED
 ;* IN SINGLE TASK MODE AND MAY BE
 ;* USED FOR ANY OTHER PURPOSE.
-	ORG  0 		;*
+	ORG  LOWRAM	;* Usually 0
 SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC
 CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE
 TIMREM	RMB  1  	;* TASK TIME REMAINING
@@ -42,8 +59,7 @@ PTYTMP	RMB  1  	;* RT EXEC TEMP VAL
 TIMTSK	RMB  1  	;* TIMED TASK INTR STATUS
 SYSPTY	RMB  1  	;* SYS PRIORITY LEVEL
 
-;	ORG  $A000	;* 
-	ORG  RAM	;* 
+	ORG  RAM	;* Originally $A000
 IRQTSK	RMB  2  	;* IRQ TASK/VECTOR
 BEGADR	RMB  2  	;* 
 ENDADR	RMB  2  	;* 
@@ -57,7 +73,8 @@ ERRFLG	RMB  1  	;* ERROR FLAG/CODE
 XTMP	RMB  2  	;* 
 IOVECT	RMB  2  	;* ACIA ADDRESS VECTOR
 
-	ORG  $A042	;* 
+;	ORG  $A042	;* 
+	ORG  RAM+$42	;* 
 STACK	EQU  *  	;* MONITOR STACK
 
 ;* TASK STATUS TABLE
@@ -81,17 +98,21 @@ STACK	EQU  *  	;* MONITOR STACK
 ;* INITIALIZES THE SP FROM THE TSP AND
 ;* EXECUTES AN RTI INSTRUCTION
 ;*
-	ORG  $A050	;* 
+;	ORG  $A050	;* 
+	ORG  RAM+$50	;* 
 TSKTBL	RMB  48  	;* 
 
+    ifdef    NJC
 ;* DEFINE PERIPHERIAL REGISTERS
-	ORG  $8004	;* 
+;	ORG  $8004	;* 
+	ORG  IO		;* 
 PIADA	RMB  1  	;* 
 PIACA	RMB  1  	;* 
 PIADB	RMB  1  	;* 
 PIACB	RMB  1  	;* 
 ACIACS	RMB  1  	;* 
 ACIADB	RMB  1  	;* 
+    endif               ;* NJC
 
 ;	ORG  $E000	;* 
 	ORG  ROM	;*
@@ -760,9 +781,9 @@ FNDTSB	PSHA		;* (LABEL/NM only?)
 	TAB		;* 
 	ASLA		;* 
 	ABA		;* 
-	ADDA #$50	;* 
+	ADDA lo(TSKTBL)	;* 
 	PSHA		;* 
-	LDAA #$A0	;* 
+	LDAA hi(TSKTBL) ;* 
 	PSHA		;* 
 	TSX		;* 
 	LDAA 0,X 	;* 
