@@ -50,6 +50,18 @@ RT/68 provides three modes which are mutually exclusive: Console Monitor to load
 
 This file is just the rt68mx.asm modified to work on the [68Retro](https://github.com/crsjones/68Retro) board. I have the ACIA at $E000, the PIA at $8004 and the ROM from $E000-$FFFF ($E100-$E1FF are for IO). Initial testing suggets this version works. I don't have the cassette tape interface built yet.
 
+## rt68-mp02.asm
+
+This file is just the rt68mx.asm modified to work on the [68Retro](https://github.com/crsjones/68Retro) board. I have the ACIA at $F000, the PIA at $F004 and the ROM from $E000-$FFFF ($F000-$F1FF are for IO). Initial testing suggets this version works. I don't have the cassette tape interface built yet. I've actually forgotten why I have the 2 versions.
+
+## Cassette interface
+
+I'm hoping to build a cassette player emulator. The difference is that this emulator will emulate 2 cassette players. Microware built a way with the MEK6800-D2 to have one cassetter setup as read and the other write. I'd like to emulate that setup.
+
+Of course Microware then got some sense and built the A/BASIC compiler to run under Mini-Flex (6800). I also have a version for Flex (6800). I haven't quite gotten to that yet though I do have Flex (6800, v3.0) and the A/BASIC compiler there.
+
+So development is more like what were are used to. Develop on Flex, S19 Dump to a serial port and run, etst, debug on the single board computer. Come back and fix the code on the Flex computer. CI was a bit hard back in the 70's.
+
 # A/BASIC
 
 A/BASIC is a basic compiler for use with RT68mx. The compiled code can be run as a process under  RT68mx. The compiler itself runs as a process.
@@ -295,7 +307,7 @@ MCM6830 is not a 27xx compatible chip
  | A15     | CS2     |          |
  | A13+A14 | CS3     |          |
 
-from E000 - FFFF. This menas that address lines A10 through A12 can not be decoded. A circuit that will accomplish this is illustrated above.
+from E000 - FFFF. This means that address lines A10 through A12 can not be decoded. A circuit that will accomplish this is illustrated above.
 
 If full decode is desired, a separate PROM that has the correct interrupt vectors included can be placed at the top of memory. The vector data is found on the last page of the source listing.
 
