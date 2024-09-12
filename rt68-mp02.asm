@@ -19,7 +19,24 @@
 ;*	*	       *
 ;*	****************
 ;*
-;* RT/68MX REAL TIME OPERATING SYSTEM
+;* Semantic version
+;*
+;* Given a version number MAJOR.MINOR.PATCH, increment the:
+;*
+;* MAJOR version when you make incompatible API changes (except for 0.x.x -> 1.x.x)
+;* MINOR version when you add functionality in a backward compatible manner
+;* PATCH version when you make backward compatible bug fixes
+;*
+;* Additional labels for pre-release and build metadata are available as
+;* extensions to the MAJOR.MINOR.PATCH format.
+;*
+;* Example:
+;* 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2
+;*   < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
+;*
+SEMVER  EQU     "0.1.4"
+;*
+;* RT/68MX REAL TIME OPERATING SYSTEM v1.1
 ;* (REVISED VERSION OF RT/68MR)
 ;*
 ;* COPYRIGHT (C) 1976,1977
@@ -35,7 +52,7 @@
 ;* BEGINNING AT 0, THESE ARE NOT NEEDED
 ;* IN SINGLE TASK MODE AND MAY BE
 ;* USED FOR ANY OTHER PURPOSE.
-	ORG  0 		;*
+	ORG  LOWRAM	;*
 SYSMOD	RMB  1  	;* RT MODE 0=USER 1=EXEC  ($0000)
 CURTSK	RMB  1  	;* TASK CURRENTLY ACTIVE  ($0001)
 TIMREM	RMB  1  	;* TASK TIME REMAINING    ($0002)
@@ -232,15 +249,17 @@ INHEX	BSR  INCH	;* INPUT ONE HEX CHAR XXXXXXXX
 	BCS  HBAD	;* 
 	CMPA #9 	;* 
 ;* 
-;* Example local label
+;* Example local label (see Pg 49 for - -- +, $$ gets messed up)
 ;* Note there is no label between branch and local label
 ;* 
-	BLS  $$IHRET	;* 
+;	BLS  +  	;* + forward - backwards
+	BLS  IHRET	;* 
 	SUBA #7 	;* 
 	BCS  HBAD	;* 
 	CMPA #15 	;* 
 	BHI  HBAD	;* 
-$$IHRET	RTS		;* (LABEL/NM only?)
+IHRET   RTS		;* (LABEL/NM only?)
+;+      RTS		;* (LABEL/NM only?)
 
 	NOP		;* ??? Filler?
 	NOP		;* 
@@ -1006,7 +1025,8 @@ BKPCMD	CLR     BKPOP           ;*
 ;* -----------------------------------------------------------------------------
 ;*
 ;* -----------------------------------------------------------------------------
-HELLOST fcb     '\12\r\nRT68-MP02 0.1.3' ;* 12 = ^L (CLS) based on 1.1
+;HELLOST fcb     '\12\r\nRT68-MP02 0.1.3' ;* 12 = ^L (CLS) based on 1.1
+HELLOST fcb     '\12\r\nRT68-MP02 ', SEMVER
         fcb     CTRL_D                   ;*
 PRMPTST fcb     '\n\r$ '                 ;*
         fcb     CTRL_D
