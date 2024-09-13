@@ -806,12 +806,12 @@ FNDTSB	PSHA		;* (LABEL/NM only?)
 	TAB		;* 
 	ASLA		;* 
 	ABA		;* 
-	ADDA #$50	;* 
+	ADDA #hi(TSKTBL);* 
 	PSHA		;* 
-	LDAA #$A0	;* 
+	LDAA #lo(TSKTBL);* 
 	PSHA		;* 
 	TSX		;* 
-	LDAA 0,X 	;* 
+	LDX  0,X 	;* 
 	INS		;* 
 	INS		;* 
 	LDAB 0,X 	;* 
@@ -903,12 +903,12 @@ OUT1CH	PSHB		;* SAVE ACC B XXXXXXXX
 	LDAB #10 	;* INIT. BIT COUNTER
 	BSR  STRTBT	;* RESET TIMER
 ;* BIT OUTPUT LOOP
-POUT1	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
+$$loop: BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
 	STAA 4,X 	;* SET BIT OUTPUT
 	SEC		;* 
 	RORA		;* SHIFT IN NEXT BIT
 	DECB		;* DEC BYTE COUNT
-	BNE  POUT1	;* BRA IF NOT LAST BIT
+	BNE  $$loop	;* BRA IF NOT LAST BIT
 	BRA  CHKSTB	;* 
 
 ;* ACIA CHAR OUTPUT ROUTINE
@@ -960,6 +960,16 @@ CMDTBL	EQU  *  	;*
 HELLOST fcb     '\12\r\nRT68MX 0.1.2'  ;* 12 = ^L (CLS) based on 1.1
         fcb     CTRL_D                 ;*
 ;*
+;$$loop: nop
+;        bra $$loop
+;split:
+;$$loop: nop
+;        bra $$loop
+;;
+;NTHER:  bra $$loop
+;        nop
+;$$loop: nop
+
 ENDTBL  EQU     *
 ;* -----------------------------------------------------------------------------
 ;* EPROM Fill
