@@ -34,7 +34,7 @@
 ;* 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2
 ;*   < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
 ;*
-SEMVER  EQU     "0.1.4"
+SEMVER  EQU     "0.1.5"
 ;*
 ;* RT/68MX REAL TIME OPERATING SYSTEM v1.1
 ;* (REVISED VERSION OF RT/68MR)
@@ -253,12 +253,12 @@ INHEX	BSR  INCH	;* INPUT ONE HEX CHAR XXXXXXXX
 ;* Note there is no label between branch and local label
 ;* 
 ;	BLS  +  	;* + forward - backwards
-	BLS  IHRET	;* 
+	BLS  $$IHRET	;* 
 	SUBA #7 	;* 
 	BCS  HBAD	;* 
 	CMPA #15 	;* 
 	BHI  HBAD	;* 
-IHRET   RTS		;* (LABEL/NM only?)
+$$IHRET: RTS		;* (LABEL/NM only?)
 ;+      RTS		;* (LABEL/NM only?)
 
 	NOP		;* ??? Filler?
@@ -841,12 +841,12 @@ FNDTSB	PSHA		;* (LABEL/NM only?)
 	TAB		;* 
 	ASLA		;* 
 	ABA		;* 
-	ADDA #$50	;* 
+	ADDA #hi(TSKTBL);* 
 	PSHA		;* 
-	LDAA #$A0	;* 
+	LDAA #lo(TSKTBL);* 
 	PSHA		;* 
 	TSX		;* 
-	LDAA 0,X 	;* 
+	LDX  0,X 	;* 
 	INS		;* 
 	INS		;* 
 	LDAB 0,X 	;* 
@@ -958,13 +958,14 @@ OUT1CH	PSHB		;* SAVE ACC B XXXXXXXX
 	BSR  STRTBT	;* RESET TIMER
 ;* BIT OUTPUT LOOP
 ;.loop: ; $$loop: also fails
-POUT1	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
+;POUT1	BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
+$$loop: BSR  WAITBT	;* WAIT BIT TIME XXXXXXXX
 	STAA 4,X 	;* SET BIT OUTPUT
 	SEC		;* 
 	RORA		;* SHIFT IN NEXT BIT
 	DECB		;* DEC BYTE COUNT
-;	BNE  .loop	;* BRA IF NOT LAST BIT DOESN"T WORK - $$loop also Fails!
-	BNE  POUT1	;* BRA IF NOT LAST BIT
+	BNE  $$loop	;* BRA IF NOT LAST BIT
+;	BNE  POUT1	;* BRA IF NOT LAST BIT
 	BRA  CHKSTB	;* 
 
 ;* ACIA CHAR OUTPUT ROUTINE
